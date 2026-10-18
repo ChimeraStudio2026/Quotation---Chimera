@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Work } from '../lib/types'
+import { asset } from '../lib/supabase'
 
 const AUTOPLAY_MS = 4500
 
@@ -89,12 +90,9 @@ export function WorksCarousel({ works }: { works: Work[] }) {
           startX.current = null
           if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1)
         }}>
-        <svg className="burst burst-red" viewBox="0 0 200 200" aria-hidden>
-          <path fill="currentColor" d={burstPath(24, 100, 70)} />
-        </svg>
-        <svg className="burst burst-purple" viewBox="0 0 200 200" aria-hidden>
-          <path fill="currentColor" d="M96 8 112 74 190 52 128 104 178 168 104 132 84 196 76 128 10 150 60 98 14 40 84 72z" />
-        </svg>
+        <img className="burst burst-red" src={asset('stickers/burst-red.svg')} alt="" aria-hidden />
+        <img className="burst burst-purple" src={asset('stickers/burst-purple.svg')} alt="" aria-hidden />
+        <img className="play-sticker" src={asset('stickers/play-red.svg')} alt="" aria-hidden />
         <div className="depth-stage">
           {works.map((w, i) => {
             const d = offset(i, active, n)
@@ -112,15 +110,4 @@ export function WorksCarousel({ works }: { works: Work[] }) {
       )}
     </section>
   )
-}
-
-// Stella a punte regolari, come la forma rossa del sito
-function burstPath(points: number, outer: number, inner: number) {
-  const pts: string[] = []
-  for (let k = 0; k < points * 2; k++) {
-    const r = k % 2 ? inner : outer
-    const a = (Math.PI * k) / points - Math.PI / 2
-    pts.push(`${(100 + Math.cos(a) * r).toFixed(1)} ${(100 + Math.sin(a) * r).toFixed(1)}`)
-  }
-  return `M${pts.join(' L')}Z`
 }

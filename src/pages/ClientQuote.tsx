@@ -39,11 +39,25 @@ export function PreviewQuotePage() {
   return <QuoteView data={data} />
 }
 
-const Star = ({ size, style }: { size: number; style: React.CSSProperties }) => (
-  <svg className="hero-shape" width={size} height={size} viewBox="0 0 100 100" style={style} aria-hidden>
-    <path fill="currentColor" d="M50 0 61 35 98 28 69 52 92 83 56 69 50 100 44 69 8 83 31 52 2 28 39 35z" />
-  </svg>
-)
+// Gli adesivi del sito chimerastudioss.com, sparsi sulla testata
+const STICKERS: [string, string][] = [
+  ['burst-purple', 'st-bg'],
+  ['burst-purple', 'st-purple-burst'],
+  ['star-red', 'st-red-star'],
+  ['burst-blue', 'st-blue-burst'],
+  ['mic-green', 'st-mic'],
+  ['bubble-blue', 'st-blue-bubble'],
+  ['star-purple', 'st-purple-star'],
+  ['bubble-purple', 'st-purple-bubble'],
+  ['star-yellow', 'st-yellow-star'],
+]
+
+// Il titolo va a capo dopo il primo " - " (cliente - progetto), come nel design
+function TitleLines({ title }: { title: string }) {
+  const i = title.indexOf(' - ')
+  if (i < 0) return <>{title}</>
+  return <>{title.slice(0, i + 2)}<br />{title.slice(i + 3)}</>
+}
 
 function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
   const { quote, categories, versions, works } = data
@@ -58,35 +72,34 @@ function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
   const catOf = (code: string) => categories.find(c => c.code === code)!
   const validUntil = new Date(new Date(quote.quote_date).getTime() + quote.validity_days * 86400000)
 
-  function openVersion(id: string) {
-    setOpenId(id)
-    requestAnimationFrame(() => detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
-  }
-
   if (!open) return null
 
   return (
     <div className="client">
-      <header className="hero">
-        <Star size={260} style={{ right: -40, top: -60 }} />
-        <Star size={120} style={{ right: 260, bottom: -30, transform: 'rotate(18deg)' }} />
-        <div className="hero-top">
-          <img src={asset('logo-white.png')} alt="" />
-          <span className="who">Chimera Studio</span>
-          <span className="spacer" />
-          {preview && <span className="pill pill-warning">Anteprima account</span>}
-        </div>
-        <div className="label hero-eyebrow" style={{ position: 'relative' }}>Quotation{quote.code ? ` · ${quote.code}` : ''}</div>
-        <h1>{quote.title}</h1>
-        <p className="lead">
-          {quote.intro?.trim() || `Abbiamo preparato tre versioni per ${quote.client_name}. Aprile, confrontale e scegli quella giusta per il progetto.`}
-        </p>
-        <div className="hero-meta">
-          <div><span>Per</span>{quote.client_name}</div>
-          <div><span>Data</span>{fmtDate(quote.quote_date)}</div>
-          <div><span>Valida fino al</span>{fmtDate(validUntil.toISOString())}</div>
-        </div>
-      </header>
+      <div className="hero-wrap">
+        <header className="hero">
+          {STICKERS.map(([file, cls], i) => <img key={i} className={`sticker ${cls}`} src={asset(`stickers/${file}.svg`)} alt="" aria-hidden />)}
+          <div className="hero-top">
+            <img src={asset('logo-black.png')} alt="" />
+            <span className="who">Chimera Studio</span>
+            <span className="spacer" />
+            {preview && <span className="pill pill-warning">Anteprima account</span>}
+          </div>
+          <span className="hero-eyebrow">Quotation{quote.code ? ` · ${quote.code}` : ''}</span>
+          <h1>
+            <TitleLines title={quote.title} />
+            <img className="sticker-inline" src={asset('stickers/play-green.svg')} alt="" aria-hidden />
+          </h1>
+          <p className="lead">
+            {quote.intro?.trim() || `Abbiamo preparato tre versioni per ${quote.client_name}. Aprile, confrontale e scegli quella giusta per il progetto.`}
+          </p>
+          <div className="hero-meta">
+            <div><span>Per</span>{quote.client_name}</div>
+            <div><span>Data</span>{fmtDate(quote.quote_date)}</div>
+            <div><span>Valida fino al</span>{fmtDate(validUntil.toISOString())}</div>
+          </div>
+        </header>
+      </div>
 
       <main className="client-main">
         {selectedId && (
@@ -105,8 +118,8 @@ function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
 
         <div className="options">
           {versions.map(v => (
-            <OptionCard key={v.id} v={v} featured={v.id === recommended?.id} open={v.id === open.id} selected={v.id === selectedId}
-              catName={code => catOf(code).name} onOpen={() => openVersion(v.id)} />
+            <OptionCard key={v.id} v={v} open={v.id === open.id} selected={v.id === selectedId}
+              catName={code => catOf(code).name} onOpen={() => setOpenId(v.id)} />
           ))}
         </div>
 
@@ -132,7 +145,7 @@ function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
                 {selectedId === open.id ? (
                   <div className="pill pill-success" style={{ justifyContent: 'center', padding: '12px' }}><IconCheck size={16} /> Versione scelta</div>
                 ) : (
-                  <button className={`btn btn-lg ${open.id === recommended?.id ? 'btn-nova' : ''}`} disabled={preview}
+                  <button className="btn btn-lg btn-nova" disabled={preview}
                     onClick={() => setChoosing(open)}>
                     Scegli {open.name}
                   </button>
@@ -164,18 +177,18 @@ function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
   )
 }
 
-function OptionCard({ v, featured, open, selected, catName, onOpen }: {
-  v: Version; featured: boolean; open: boolean; selected: boolean; catName: (c: string) => string; onOpen: () => void
+// La card aperta diventa scura e si ingrandisce; si cambia toccando un'altra card
+function OptionCard({ v, open, selected, catName, onOpen }: {
+  v: Version; open: boolean; selected: boolean; catName: (c: string) => string; onOpen: () => void
 }) {
   const t = versionTotals(v)
   const included = v.sections.filter(isIncluded)
   const top = included.slice(0, 5)
   return (
-    <button className={`option ${featured ? 'featured' : ''} ${open ? 'open' : ''} ${selected ? 'selected-ring' : ''}`} onClick={onOpen}>
-      {featured && <span className="pill badge-top">Consigliata</span>}
+    <button className={`option ${open ? 'open' : ''} ${selected ? 'selected-ring' : ''}`} onClick={onOpen} aria-pressed={open}>
       <div>
-        <div className="label" style={{ color: featured ? 'var(--nova)' : 'var(--ink-subtle)' }}>Versione {v.position}</div>
-        <div className="section-title" style={{ marginTop: 6, fontSize: featured ? 24 : 19 }}>{v.name}</div>
+        <div className="label v-label">Versione {v.position}</div>
+        <div className="option-name">{v.name}</div>
         {v.tagline && <div className="muted" style={{ fontSize: 14 }}>{v.tagline}</div>}
       </div>
       <div>
@@ -188,7 +201,7 @@ function OptionCard({ v, featured, open, selected, catName, onOpen }: {
         ))}
         {included.length > top.length && <li className="muted" style={{ paddingLeft: 22 }}>+ altre {included.length - top.length} voci</li>}
       </ul>
-      <span className={`btn ${featured ? 'btn-nova' : 'btn-outline'}`} style={{ alignSelf: 'flex-start' }}>
+      <span className={`btn ${open ? 'btn-nova' : 'btn-outline'}`} style={{ alignSelf: 'flex-start' }}>
         {open ? 'Stai guardando questa' : 'Vedi cosa c\'è dentro'}
       </span>
     </button>
