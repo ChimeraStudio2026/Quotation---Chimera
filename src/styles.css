@@ -229,16 +229,35 @@ img, video { display: block; max-width: 100%; }
 
 /* Adesivi del sito: posizioni come nel design CLI-01 */
 .sticker { position: absolute; pointer-events: none; user-select: none; max-width: none; }
-.sticker-inline { display: inline-block; width: clamp(56px, 7vw, 100px); vertical-align: middle; margin-left: 12px; transform: rotate(-10deg); }
-.st-bg { left: -220px; top: -260px; width: 1100px; opacity: .5; transform: rotate(-10deg); }
-.st-purple-burst { right: -70px; bottom: -90px; width: 320px; transform: rotate(12deg); }
-.st-red-star { right: 150px; top: 24px; width: 280px; transform: rotate(-8deg); }
-.st-blue-burst { right: 359px; top: 191px; width: 82px; transform: rotate(-6deg); }
-.st-mic { right: 420px; top: 24px; width: 110px; transform: rotate(-12deg); }
-.st-blue-bubble { right: 225px; top: 289px; width: 130px; transform: rotate(10deg); }
-.st-purple-star { right: 600px; bottom: 10px; width: 140px; transform: rotate(-16deg); }
-.st-purple-bubble { right: 404px; bottom: 119px; width: 96px; transform: rotate(6deg); }
-.st-yellow-star { right: -78px; bottom: -28px; width: 247px; transform: rotate(-20deg); }
+.sticker-inline { display: inline-block; width: clamp(56px, 7vw, 100px); vertical-align: middle; margin-left: 12px; --r: -10deg; }
+.st-bg { left: -220px; top: -260px; width: 1100px; opacity: .5; --r: -10deg; }
+.st-purple-burst { right: -70px; bottom: -90px; width: 320px; --r: 12deg; }
+.st-red-star { right: 150px; top: 24px; width: 280px; --r: -8deg; }
+.st-blue-burst { right: 359px; top: 191px; width: 82px; --r: -6deg; }
+.st-mic { right: 420px; top: 24px; width: 110px; --r: -12deg; }
+.st-blue-bubble { right: 225px; top: 289px; width: 130px; --r: 10deg; }
+.st-purple-star { right: 600px; bottom: 10px; width: 140px; --r: -16deg; }
+.st-purple-bubble { right: 404px; bottom: 119px; width: 96px; --r: 6deg; }
+.st-yellow-star { right: -78px; bottom: -28px; width: 247px; --r: -20deg; }
+/* Adesivi animati come sul sito: le stelle girano piano, gli altri fluttuano */
+.sticker, .sticker-inline { transform: rotate(var(--r, 0deg)); }
+.st-bg, .st-purple-burst, .st-red-star, .st-blue-burst, .st-purple-star, .st-yellow-star { animation: st-spin 60s linear infinite; }
+.st-red-star { animation-duration: 38s; }
+.st-blue-burst { animation-duration: 24s; animation-direction: reverse; }
+.st-purple-star { animation-duration: 30s; animation-direction: reverse; }
+.st-yellow-star { animation-duration: 45s; }
+.st-bg { animation-duration: 120s; }
+.st-mic, .st-blue-bubble, .st-purple-bubble, .sticker-inline { animation: st-float 5s ease-in-out infinite; }
+.st-blue-bubble { animation-duration: 6s; animation-delay: -2s; }
+.st-purple-bubble { animation-duration: 4.5s; animation-delay: -1s; }
+.sticker-inline { animation-duration: 4s; animation-delay: -3s; }
+@keyframes st-spin { from { transform: rotate(var(--r, 0deg)); } to { transform: rotate(calc(var(--r, 0deg) + 360deg)); } }
+@keyframes st-float {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-12px) rotate(calc(var(--r, 0deg) + 8deg)); }
+}
+@media (prefers-reduced-motion: reduce) { .sticker, .sticker-inline, .play-sticker { animation: none; } }
+
 @media (max-width: 1240px) {
   .st-purple-star, .st-purple-bubble, .st-blue-burst { display: none; }
   .st-mic { right: 300px; }
@@ -384,7 +403,7 @@ img, video { display: block; max-width: 100%; }
 .burst { position: absolute; top: 50%; pointer-events: none; z-index: 0; animation: burst-spin 40s linear infinite; }
 .burst-red { width: calc(var(--card-w) * .67); left: calc(50% - var(--card-w) * 1.33); margin-top: calc(var(--card-w) * -.33); }
 .burst-purple { width: calc(var(--card-w) * .62); left: calc(50% + var(--card-w) * .67); margin-top: calc(var(--card-w) * -.31); animation-direction: reverse; animation-duration: 55s; }
-.play-sticker { position: absolute; top: 20px; left: calc(50% + var(--card-w) * .52); width: calc(var(--card-w) * .15); z-index: 1100; transform: rotate(8deg); pointer-events: none; }
+.play-sticker { position: absolute; top: 20px; left: calc(50% + var(--card-w) * .52); width: calc(var(--card-w) * .15); z-index: 1100; --r: 8deg; pointer-events: none; animation: st-float 4.5s ease-in-out infinite; }
 @keyframes burst-spin { to { transform: rotate(360deg); } }
 
 .depth-nav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 28px; }
