@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { asset, supabase } from '../lib/supabase'
 import { IconDoc, IconLogout, IconPlay } from './Icons'
 
 export function AppShell({ email }: { email: string }) {
@@ -7,7 +7,7 @@ export function AppShell({ email }: { email: string }) {
     <div className="shell">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <img src="/logo-black.png" alt="" />
+          <img src={asset('logo-black.png')} alt="" />
           Preventivi
         </div>
         <NavLink to="/" end className="nav-link"><IconDoc /> Quotation</NavLink>

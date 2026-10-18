@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { asset, supabase } from '../lib/supabase'
 import { buildPreview } from '../lib/quoteData'
 import { fmtDate, isIncluded, itemTotal, money, moneyRound, sectionTotal, versionTotals } from '../lib/calc'
 import type { PublicQuote, Version, Work } from '../lib/types'
@@ -20,7 +20,7 @@ export function ClientQuotePage() {
     return (
       <div className="auth-wrap">
         <div className="card auth-card stack" style={{ textAlign: 'center', alignItems: 'center' }}>
-          <img src="/logo-black.png" alt="Chimera" width={44} height={44} />
+          <img src={asset('logo-black.png')} alt="Chimera" width={44} height={44} />
           <h1 className="section-title">Quotation non disponibile</h1>
           <p className="muted" style={{ margin: 0 }}>Il link non è valido o la quotation non è più attiva. Scrivi al tuo account Chimera.</p>
         </div>
@@ -71,7 +71,7 @@ function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
         <Star size={260} style={{ right: -40, top: -60 }} />
         <Star size={120} style={{ right: 260, bottom: -30, transform: 'rotate(18deg)' }} />
         <div className="hero-top">
-          <img src="/logo-white.png" alt="" />
+          <img src={asset('logo-white.png')} alt="" />
           <span className="who">Chimera Studio</span>
           <span className="spacer" />
           {preview && <span className="pill pill-warning">Anteprima account</span>}
@@ -149,7 +149,7 @@ function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
       </main>
 
       <footer className="client-foot">
-        <img src="/logo-black.png" alt="" />
+        <img src={asset('logo-black.png')} alt="" />
         <div>
           <div className="card-title">Chimera Studio Srl</div>
           <div className="meta">via Antonello da Messina 5, Milano · <a href="https://www.chimerastudioss.com" target="_blank" rel="noreferrer">chimerastudioss.com</a></div>

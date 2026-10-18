@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { appUrl, supabase } from '../lib/supabase'
 import { loadCategories, loadQuote, loadWorks, saveQuote } from '../lib/quoteData'
 import { isIncluded, itemTotal, money, sectionTotal, versionTotals } from '../lib/calc'
 import type { Category, Item, Quote, Section, Version, Work } from '../lib/types'
@@ -102,7 +102,7 @@ export function QuoteEditor() {
       await supabase.from('quotes').update({ status: 'sent' }).eq('id', quote!.id)
       setQuote(q => (q ? { ...q, status: 'sent' } : q))
     }
-    const url = `${window.location.origin}/p/${quote!.share_token}`
+    const url = appUrl(`p/${quote!.share_token}`)
     try {
       await navigator.clipboard.writeText(url)
       toast.show('Link copiato: mandalo al cliente')
@@ -113,7 +113,7 @@ export function QuoteEditor() {
 
   async function preview() {
     if (dirty && !(await save(true))) return
-    window.open(`/anteprima/${quote!.id}`, '_blank')
+    window.open(appUrl(`anteprima/${quote!.id}`), '_blank')
   }
 
   async function remove() {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase, TEAM_DOMAIN } from '../lib/supabase'
+import { appUrl, asset, supabase, TEAM_DOMAIN } from '../lib/supabase'
 
 export function Login({ wrongDomain }: { wrongDomain: boolean }) {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
@@ -18,7 +18,7 @@ export function Login({ wrongDomain }: { wrongDomain: boolean }) {
     setBusy(true)
     const { error } = mode === 'login'
       ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } })
+      : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: appUrl() } })
     setBusy(false)
     if (error) setMsg(error.message)
     else if (mode === 'signup') setMsg('Ti abbiamo mandato una email: conferma l\'indirizzo e poi accedi.')
@@ -27,7 +27,7 @@ export function Login({ wrongDomain }: { wrongDomain: boolean }) {
   return (
     <div className="auth-wrap">
       <form className="card auth-card stack" onSubmit={submit}>
-        <img src="/logo-black.png" alt="Chimera" width={44} height={44} />
+        <img src={asset('logo-black.png')} alt="Chimera" width={44} height={44} />
         <div>
           <h1 className="page-title" style={{ fontSize: 28, lineHeight: '34px' }}>Preventivi Chimera</h1>
           <p className="muted" style={{ margin: '6px 0 0' }}>Area riservata al team account.</p>
