@@ -44,10 +44,10 @@ export async function createQuote(fields: Partial<Quote>) {
 // Salva testata, versioni, sezioni e voci. Le sezioni vengono riscritte da zero a ogni salvataggio.
 // Le richieste sono raggruppate e le versioni salvate in parallelo, così il salvataggio resta veloce.
 export async function saveQuote(quote: Quote, versions: Version[], pickedWorks: string[]) {
-  const { id, code, title, client_name, client_vat, client_address, intro, quote_date, validity_days } = quote
+  const { id, code, title, client_name, client_vat, client_address, intro, services, quote_date, validity_days } = quote
   const header = supabase
     .from('quotes')
-    .update({ code, title, client_name, client_vat, client_address, intro, quote_date, validity_days })
+    .update({ code, title, client_name, client_vat, client_address, intro, services, quote_date, validity_days })
     .eq('id', id)
     .then(check)
   const works = supabase.from('quote_works').delete().eq('quote_id', id).then(check).then(() =>
@@ -116,10 +116,10 @@ export async function loadWorks(): Promise<Work[]> {
 export async function buildPreview(id: string): Promise<PublicQuote> {
   const [{ quote, versions, pickedWorks }, categories, works] = await Promise.all([loadQuote(id), loadCategories(), loadWorks()])
   const used = new Set(versions.flatMap(v => v.sections.filter(s => s.items.length || s.note?.trim()).map(s => s.category_code)))
-  return {
-    quote,
-    categories,
-    versions,
-    works: pickedWorks.length ? works.filter(w => pickedWorks.includes(w.id)) : works.filter(w => w.categories.some(c => used.has(c))),
-  }
+  const shown = pickedWorks.length
+    ? works.filter(w => pickedWorks.includes(w.id))
+    : quote.services?.length
+      ? works.filter(w => w.service && quote.services.includes(w.service))
+      : works.filter(w => w.categories.some(c => used.has(c)))
+  return { quote, categories, versions, works: shown }
 }

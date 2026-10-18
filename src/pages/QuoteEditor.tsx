@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { appUrl, supabase } from '../lib/supabase'
 import { loadCategories, loadQuote, loadWorks, saveQuote } from '../lib/quoteData'
 import { isIncluded, itemTotal, money, sectionTotal, versionTotals } from '../lib/calc'
-import type { Category, Item, Quote, Section, Version, Work } from '../lib/types'
+import { SERVICES, type Category, type Item, type Quote, type Section, type Version, type Work } from '../lib/types'
 import { StatusPill } from '../components/StatusPill'
 import { IconChevron, IconCopy, IconEye, IconLink, IconPlus, IconStar, IconTrash } from '../components/Icons'
 import { useToast } from '../components/Toast'
@@ -321,10 +321,22 @@ export function QuoteEditor() {
           <div>
             <h2 className="section-title">Lavori da mostrare</h2>
             <p className="meta" style={{ margin: '4px 0 0' }}>
-              Se non selezioni niente, il cliente vede in automatico i lavori collegati ai servizi inclusi.
-              Altrimenti vede solo quelli che scegli qui. Gestisci la libreria in <Link to="/lavori">Lavori</Link>.
+              Scegli il servizio che stai vendendo: il cliente vede girare i lavori di quel servizio.
+              Se selezioni dei lavori singoli qui sotto, vede solo quelli. Gestisci la libreria in <Link to="/lavori">Lavori</Link>.
             </p>
           </div>
+          <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+            {SERVICES.map(sv => {
+              const on = quote.services.includes(sv)
+              return (
+                <button key={sv} className={`chip ${on ? 'on' : ''}`}
+                  onClick={() => setQ({ services: on ? quote.services.filter(x => x !== sv) : [...quote.services, sv] })}>
+                  {on && <IconStar size={12} />}{sv}
+                </button>
+              )
+            })}
+          </div>
+          <div className="label subtle">Oppure lavori singoli</div>
           {works.length === 0 ? (
             <div className="empty">Nessun lavoro in libreria. <Link to="/lavori">Aggiungi i primi video</Link>.</div>
           ) : (

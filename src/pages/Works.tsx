@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { loadCategories, loadWorks } from '../lib/quoteData'
-import type { Category, Work } from '../lib/types'
+import { SERVICES, type Category, type Work } from '../lib/types'
 import { VideoTile } from '../components/VideoTile'
 import { IconPlus, IconStar, IconTrash } from '../components/Icons'
 import { useToast } from '../components/Toast'
 
 type Draft = Omit<Work, 'id' | 'position'> & { id?: string; position?: number }
-const blank: Draft = { title: '', brand: '', description: '', video_url: '', poster_url: '', categories: [], featured: false }
+const blank: Draft = { title: '', brand: '', description: '', video_url: '', poster_url: '', logo_url: '', link_url: '', service: null, categories: [], featured: false }
 
 async function upload(file: File) {
   const path = `${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, '_')}`
@@ -31,7 +31,7 @@ export function Works() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>, field: 'video_url' | 'poster_url') {
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>, field: 'video_url' | 'poster_url' | 'logo_url') {
     const file = e.target.files?.[0]
     if (!file || !draft) return
     setBusy(true)
@@ -55,6 +55,9 @@ export function Works() {
       description: draft.description || null,
       video_url: draft.video_url,
       poster_url: draft.poster_url || null,
+      logo_url: draft.logo_url || null,
+      link_url: draft.link_url || null,
+      service: draft.service || null,
       categories: draft.categories,
       featured: draft.featured,
     }
@@ -113,6 +116,7 @@ export function Works() {
             <VideoTile work={w} />
             <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
               {w.featured && <span className="pill pill-nova"><IconStar size={12} /> In evidenza</span>}
+              {w.service && <span className="pill pill-success">{w.service}</span>}
               {w.categories.map(c => <span key={c} className="pill pill-pending">{catName(c)}</span>)}
             </div>
             <div><button className="btn btn-outline btn-sm" onClick={() => setDraft({ ...w })}>Modifica</button></div>
@@ -141,11 +145,28 @@ export function Works() {
             <label className="field"><span>…oppure carica il file video</span>
               <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={e => onFile(e, 'video_url')} />
             </label>
-            <label className="field"><span>Copertina (opzionale)</span>
-              <input type="file" accept="image/*" onChange={e => onFile(e, 'poster_url')} />
+            <div className="grid-2">
+              <label className="field"><span>Copertina {draft.poster_url ? '✓' : '(opzionale)'}</span>
+                <input type="file" accept="image/*" onChange={e => onFile(e, 'poster_url')} />
+              </label>
+              <label className="field"><span>Logo del brand {draft.logo_url ? '✓' : '(opzionale)'}</span>
+                <input type="file" accept="image/*" onChange={e => onFile(e, 'logo_url')} />
+              </label>
+            </div>
+            <label className="field"><span>Link al caso studio (opzionale)</span>
+              <input className="input" value={draft.link_url ?? ''} onChange={e => setDraft({ ...draft, link_url: e.target.value })} placeholder="https://chimerastudioss.com/case-studies/…" />
             </label>
             <div className="field">
-              <span>Servizi collegati</span>
+              <span>Servizio</span>
+              <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
+                {SERVICES.map(sv => (
+                  <button type="button" key={sv} className={`chip ${draft.service === sv ? 'on' : ''}`}
+                    onClick={() => setDraft({ ...draft, service: draft.service === sv ? null : sv })}>{sv}</button>
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <span>Voci del preventivo collegate</span>
               <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
                 {cats.map(c => {
                   const on = draft.categories.includes(c.code)

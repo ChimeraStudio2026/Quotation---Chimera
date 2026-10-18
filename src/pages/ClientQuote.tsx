@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { asset, supabase } from '../lib/supabase'
 import { buildPreview } from '../lib/quoteData'
 import { fmtDate, isIncluded, itemTotal, money, moneyRound, sectionTotal, versionTotals } from '../lib/calc'
-import type { PublicQuote, Version, Work } from '../lib/types'
-import { VideoTile } from '../components/VideoTile'
+import type { PublicQuote, Version } from '../lib/types'
+import { WorksCarousel } from '../components/WorksCarousel'
 import { IconCheck, IconChevron } from '../components/Icons'
 
 export function ClientQuotePage() {
@@ -145,7 +145,7 @@ function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
           </div>
         </div>
 
-        <Showcase version={open} works={works} catOf={catOf} />
+        <WorksCarousel works={works} />
       </main>
 
       <footer className="client-foot">
@@ -259,44 +259,6 @@ function Totals({ v }: { v: Version }) {
       <span className="muted">Totale + IVA {v.vat_pct}%</span><span className="muted">{money(t.totalVat)}</span>
       {t.extras > 0 && (<><span className="muted">Extras a parte</span><span className="muted">{money(t.extras)}</span></>)}
     </div>
-  )
-}
-
-// Sotto la versione aperta girano i lavori collegati ai servizi che contiene
-function Showcase({ version, works, catOf }: { version: Version; works: Work[]; catOf: (c: string) => { name: string; position: number } }) {
-  const groups = useMemo(() => {
-    const used = new Set<string>()
-    const out: { title: string; works: Work[] }[] = []
-    const codes = version.sections.filter(isIncluded).map(s => s.category_code)
-      .sort((a, b) => catOf(a).position - catOf(b).position)
-    for (const code of codes) {
-      const list = works.filter(w => w.categories.includes(code) && !used.has(w.id))
-      list.forEach(w => used.add(w.id))
-      if (list.length) out.push({ title: catOf(code).name, works: list })
-    }
-    const rest = works.filter(w => !used.has(w.id))
-    if (rest.length) out.push({ title: out.length ? 'Altri lavori' : 'I nostri lavori', works: rest })
-    return out
-  }, [version, works, catOf])
-
-  if (!groups.length) return null
-  return (
-    <section className="showcase">
-      <div className="client-section-head">
-        <div>
-          <div className="label subtle">Cosa sappiamo fare</div>
-          <h2 className="page-title" style={{ marginTop: 6 }}>I nostri lavori per {version.name}</h2>
-        </div>
-      </div>
-      {groups.map(g => (
-        <div key={g.title} className="showcase-group">
-          <h3 className="section-title" style={{ marginBottom: 16 }}>{g.title}</h3>
-          <div className="showcase-row">
-            {g.works.map(w => <VideoTile key={w.id} work={w} />)}
-          </div>
-        </div>
-      ))}
-    </section>
   )
 }
 

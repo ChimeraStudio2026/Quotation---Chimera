@@ -30,7 +30,7 @@ function TeamArea() {
 
   if (session === undefined) return null
   const email = session?.user.email ?? ''
-  if (!session || !email.toLowerCase().endsWith(TEAM_DOMAIN)) return <Login wrongDomain={!!session} />
+  if (!session || !email.toLowerCase().endsWith(TEAM_DOMAIN)) return <Login wrongAccount={!!session} />
 
   return (
     <Routes>

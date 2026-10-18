@@ -41,6 +41,7 @@ export type Quote = {
   client_vat: string | null
   client_address: string | null
   intro: string | null
+  services: string[]
   quote_date: string
   validity_days: number
   share_token: string
@@ -60,13 +61,19 @@ export type Work = {
   video_url: string
   poster_url: string | null
   categories: string[]
+  service: string | null
+  logo_url: string | null
+  link_url: string | null
   featured: boolean
   position: number
 }
 
 export type PublicQuote = {
-  quote: Pick<Quote, 'id' | 'code' | 'title' | 'client_name' | 'client_vat' | 'client_address' | 'intro' | 'quote_date' | 'validity_days' | 'status' | 'selected_version_id' | 'selected_at'>
+  quote: Pick<Quote, 'id' | 'code' | 'title' | 'client_name' | 'client_vat' | 'client_address' | 'intro' | 'services' | 'quote_date' | 'validity_days' | 'status' | 'selected_version_id' | 'selected_at'>
   categories: Category[]
   versions: (Version & { id: string })[]
   works: Work[]
 }
+
+// Le linee di servizio di Chimera, come sul sito
+export const SERVICES = ['Event Coverage', 'Live Content Creation', 'Social Production', 'Big Production'] as const

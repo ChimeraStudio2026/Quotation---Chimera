@@ -207,7 +207,7 @@ img, video { display: block; max-width: 100%; }
 .video-caption .title { font-weight: 700; }
 
 /* ---------- Vista cliente ---------- */
-.client { background: var(--surface-panel); min-height: 100vh; }
+.client { background: var(--surface-panel); min-height: 100vh; overflow-x: clip; }
 .hero {
   position: relative; overflow: hidden; background: var(--stage); color: var(--on-dark);
   margin: 10px; border-radius: var(--radius-panel); padding: 40px 56px 64px;
@@ -309,3 +309,66 @@ img, video { display: block; max-width: 100%; }
   .sec-items table { min-width: 520px; }
   .showcase-row { grid-auto-columns: 80%; }
 }
+
+/* ---------- Lavori: carosello come su chimerastudioss.com ---------- */
+@font-face {
+  font-family: "Neue Plak Extended";
+  src: url("https://cdn.prod.website-files.com/6a313ee304763bb2bbebf621/6a4e259ad334d9e6639f72c8_Neue%20Plak%20Extended%20Bold.ttf") format("truetype");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+:root {
+  --display: "Neue Plak Extended", "DM Sans", system-ui, sans-serif;
+  --burst-red: #e5513a;
+  --burst-purple: #d38af7;
+  --card-w: clamp(250px, 33vw, 480px);
+}
+.works-sec { margin: 96px calc(50% - 50vw) 0; padding: 72px 0 56px; background: var(--surface-app); overflow: hidden; }
+.works-head { max-width: 1100px; margin: 0 auto 56px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.works-h { font-family: var(--display); font-size: clamp(30px, 3.2vw, 46px); line-height: 1.1; font-weight: 700; margin: 0; }
+.works-cta {
+  display: inline-flex; align-items: center; gap: 8px; padding: 18px 22px; border-radius: 14px; background: var(--surface-card);
+  color: #b45ad8; font-family: var(--display); font-size: clamp(17px, 1.6vw, 22px); font-weight: 700; text-decoration: none;
+  box-shadow: 0 1px 0 var(--border); transition: transform .2s ease;
+}
+.works-cta:hover { transform: rotate(-1.5deg) scale(1.03); }
+
+.depth { position: relative; height: calc(var(--card-w) * 1.13 + 20px); perspective: 1050px; touch-action: pan-y; user-select: none; }
+.depth-stage { position: absolute; inset: 0; transform-style: preserve-3d; }
+.depth-item {
+  position: absolute; top: 10px; left: 50%; width: var(--card-w); height: calc(var(--card-w) * 1.13); margin-left: calc(var(--card-w) / -2);
+  transition: transform .8s cubic-bezier(.22, .8, .24, 1), opacity .6s ease; will-change: transform;
+}
+.depth-item[data-d="0"] { transform: translateX(0) scale(1); z-index: 1000; }
+.depth-item[data-d="-1"] { transform: translateX(calc(var(--card-w) * -.65)) rotateY(5deg) scale(.75); z-index: 500; cursor: pointer; }
+.depth-item[data-d="1"] { transform: translateX(calc(var(--card-w) * .65)) rotateY(-5deg) scale(.75); z-index: 500; cursor: pointer; }
+.depth-item[data-d="-2"] { transform: translateX(calc(var(--card-w) * -.9)) scale(.5); opacity: 0; z-index: 1; pointer-events: none; }
+.depth-item[data-d="2"] { transform: translateX(calc(var(--card-w) * .9)) scale(.5); opacity: 0; z-index: 1; pointer-events: none; }
+
+.case-card { position: relative; width: 100%; height: 100%; border-radius: 21px; overflow: hidden; background: var(--stage); color: #fff; }
+.case-card > img, .case-card > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 7px; }
+.case-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.65) 100%); }
+.case-text { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 20px 22px; display: flex; flex-direction: column; gap: 4px; }
+.case-top { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 12px; }
+.case-logo { display: inline-flex; align-items: center; height: 34px; padding: 4px 6px; background: #fff; border-radius: 4px; }
+.case-logo img { height: 100%; width: auto; max-width: 120px; object-fit: contain; }
+.case-go { width: 36px; height: 36px; border-radius: 8px; background: #fff; color: #000; display: grid; place-items: center; }
+.case-title { font-family: var(--display); font-size: clamp(17px, 1.9vw, 26px); line-height: 1.2; font-weight: 700; text-wrap: balance; }
+.case-service { font-size: clamp(14px, 1.35vw, 19px); opacity: .7; }
+
+.burst { position: absolute; top: 50%; pointer-events: none; z-index: 0; animation: burst-spin 40s linear infinite; }
+.burst-red { color: var(--burst-red); width: calc(var(--card-w) * .7); left: calc(50% - var(--card-w) * 1.35); margin-top: calc(var(--card-w) * -.35); }
+.burst-purple { color: var(--burst-purple); width: calc(var(--card-w) * .75); left: calc(50% + var(--card-w) * .62); margin-top: calc(var(--card-w) * -.3); animation-direction: reverse; animation-duration: 55s; }
+@keyframes burst-spin { to { transform: rotate(360deg); } }
+
+.depth-nav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 28px; }
+.depth-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border-strong); background: var(--surface-card); display: grid; place-items: center; cursor: pointer; }
+.depth-count { font-size: 13px; font-weight: 600; color: var(--ink-muted); min-width: 52px; text-align: center; }
+
+@media (max-width: 700px) {
+  :root { --card-w: 68vw; }
+  .works-sec { margin-top: 64px; padding: 48px 0 40px; }
+  .works-head { margin-bottom: 32px; padding: 0 16px; }
+  .depth-item[data-d="-1"] { transform: translateX(calc(var(--card-w) * -.58)) rotateY(5deg) scale(.72); }
+  .depth-item[data-d="1"] { transform: translateX(calc(var(--card-w) * .58)) rotateY(-5deg) scale(.72); }
+}
+@media (prefers-reduced-motion: reduce) { .burst { animation: none; } .depth-item { transition: none; } }
