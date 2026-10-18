@@ -6,6 +6,7 @@ import { AppShell } from './components/AppShell'
 import { Login } from './pages/Login'
 import { Dashboard } from './pages/Dashboard'
 import { QuoteEditor } from './pages/QuoteEditor'
+import { NewQuote } from './pages/NewQuote'
 import { Works } from './pages/Works'
 import { ClientQuotePage, PreviewQuotePage } from './pages/ClientQuote'
 
@@ -37,6 +38,7 @@ function TeamArea() {
       <Route path="anteprima/:id" element={<PreviewQuotePage />} />
       <Route element={<AppShell email={email} />}>
         <Route index element={<Dashboard />} />
+        <Route path="nuova" element={<NewQuote />} />
         <Route path="quotation/:id" element={<QuoteEditor />} />
         <Route path="lavori" element={<Works />} />
       </Route>

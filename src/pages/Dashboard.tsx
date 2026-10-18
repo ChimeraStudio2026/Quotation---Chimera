@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { createQuote } from '../lib/quoteData'
 import { fmtDate } from '../lib/calc'
 import type { Quote } from '../lib/types'
 import { StatusPill } from '../components/StatusPill'
@@ -11,7 +10,6 @@ type Row = Quote & { selected?: { name: string; position: number } | null }
 
 export function Dashboard() {
   const [rows, setRows] = useState<Row[] | null>(null)
-  const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
@@ -26,16 +24,6 @@ export function Dashboard() {
       })
   }, [])
 
-  async function newQuote() {
-    setCreating(true)
-    try {
-      const q = await createQuote({ title: 'Nuova quotation', client_name: 'Cliente' })
-      navigate(`/quotation/${q.id}`)
-    } catch (e) {
-      setError((e as Error).message)
-      setCreating(false)
-    }
-  }
 
   return (
     <>
@@ -46,7 +34,7 @@ export function Dashboard() {
           <p className="muted" style={{ margin: '6px 0 0' }}>Ogni quotation ha 3 versioni: il cliente le confronta e ne sceglie una.</p>
         </div>
         <div className="spacer" />
-        <button className="btn" onClick={newQuote} disabled={creating}><IconPlus size={16} /> Nuova quotation</button>
+        <button className="btn" onClick={() => navigate('/nuova')}><IconPlus size={16} /> Nuova quotation</button>
       </div>
 
       {error && <div className="pill pill-danger" style={{ marginBottom: 16 }}>{error}</div>}
@@ -54,7 +42,7 @@ export function Dashboard() {
       {rows && rows.length === 0 && (
         <div className="empty">
           <p className="card-title" style={{ color: 'var(--ink)' }}>Ancora nessuna quotation</p>
-          <p>Crea la prima: inserisci le 3 versioni e condividi il link con il cliente.</p>
+          <p>Crea la prima: carica i 3 PDF di Cerbero e condividi il link con il cliente.</p>
         </div>
       )}
 
