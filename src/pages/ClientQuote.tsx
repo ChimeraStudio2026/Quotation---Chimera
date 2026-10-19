@@ -138,7 +138,10 @@ function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
             </div>
           </div>
           <div className="detail-body">
-            <VersionSections version={open} catOf={catOf} />
+            <div style={{ minWidth: 0 }}>
+              <VersionSections version={open} catOf={catOf} />
+              <VersionReferences version={open} />
+            </div>
             <aside className="detail-aside">
               <div className="sticky">
                 <Totals v={open} />
@@ -257,6 +260,32 @@ function VersionSections({ version, catOf }: { version: Version; catOf: (c: stri
         )
       })}
       {sections.length === 0 && <p className="not-incl">Questa versione è ancora in preparazione.</p>}
+    </div>
+  )
+}
+
+// Le reference che il team ha caricato per questo pacchetto
+function VersionReferences({ version }: { version: Version }) {
+  const refs = version.references ?? []
+  if (!refs.length) return null
+  return (
+    <div className="refs">
+      <div className="label subtle">Reference per {version.name}</div>
+      <div className="refs-grid">
+        {refs.map(r => (
+          <figure key={r.id} className="ref-card">
+            {r.media_type === 'image' && <img src={r.media_url} alt={r.title} loading="lazy" />}
+            {r.media_type === 'video' && <video src={r.media_url} muted loop playsInline autoPlay controls={false} />}
+            {r.media_type === 'link' && (
+              <a className="ref-link" href={r.media_url} target="_blank" rel="noreferrer">Apri la reference →</a>
+            )}
+            <figcaption>
+              <strong>{r.title}</strong>
+              {r.note && <span className="meta">{r.note}</span>}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
     </div>
   )
 }

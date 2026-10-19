@@ -437,3 +437,16 @@ img, video { display: block; max-width: 100%; }
 .spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--nova-soft); border-top-color: var(--nova); animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 960px) { .slots { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Reference dei pacchetti ---------- */
+.ref-block { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+.ref-row { display: flex; align-items: center; gap: 10px; }
+.ref-thumb { width: 52px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--stage); flex-shrink: 0; }
+.ref-thumb-link { display: grid; place-items: center; color: var(--on-dark); font-size: 11px; font-weight: 700; }
+.refs { padding: 8px 40px 32px; display: flex; flex-direction: column; gap: 14px; }
+.refs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.ref-card { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.ref-card img, .ref-card video { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-lg); background: var(--stage); }
+.ref-card figcaption { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.ref-link { display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: var(--radius-lg); background: var(--nova-soft); color: var(--nova-ink); font-weight: 700; text-decoration: none; }
+@media (max-width: 960px) { .refs { padding: 4px 20px 24px; } }

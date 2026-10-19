@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { appUrl, supabase } from '../lib/supabase'
-import { loadCategories, loadQuote, loadWorks, saveQuote } from '../lib/quoteData'
+import { addReference, deleteReference, loadCategories, loadQuote, loadWorks, saveQuote, uploadMedia } from '../lib/quoteData'
 import { fmtDate, isIncluded, money, sectionTotal, versionTotals } from '../lib/calc'
 import { headerFromPdf, versionFromPdf } from '../lib/fromPdf'
-import { SERVICES, type Category, type Quote, type Version, type Work } from '../lib/types'
+import { SERVICES, type Category, type Quote, type Reference, type Version, type Work } from '../lib/types'
 import { StatusPill } from '../components/StatusPill'
 import { PdfSlot, type SlotState } from '../components/PdfSlot'
 import { IconEye, IconLink, IconStar, IconTrash } from '../components/Icons'
@@ -25,6 +25,7 @@ export function QuoteEditor() {
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [refFor, setRefFor] = useState<number | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -104,6 +105,17 @@ export function QuoteEditor() {
     else navigate('/')
   }
 
+  async function removeRef(r: Reference) {
+    if (!confirm(`Eliminare la reference "${r.title}"?`)) return
+    try {
+      await deleteReference(r.id)
+      setVersions(vs => vs.map(v => ({ ...v, references: (v.references ?? []).filter(x => x.id !== r.id) })))
+      toast.show('Reference eliminata')
+    } catch (e) {
+      toast.show(`Errore: ${(e as Error).message}`)
+    }
+  }
+
   const selectedVersion = versions.find(v => v.id === quote.selected_version_id)
   const setQ = (patch: Partial<Quote>) => { setQuote({ ...quote, ...patch }); setDirty(true) }
   const replacingVersion = versions.find(v => v.position === replacing)
@@ -161,6 +173,23 @@ export function QuoteEditor() {
                     ))}
                   </ul>
                   <div className="meta">Fee {v.production_fee_pct}%{Number(v.discount) > 0 ? ` · sconto ${money(Number(v.discount))}` : ''} · IVA {v.vat_pct}%</div>
+                  <div className="ref-block">
+                    <div className="label subtle">Reference</div>
+                    {(v.references ?? []).length === 0 && <div className="meta">Nessuna reference per questo pacchetto.</div>}
+                    {(v.references ?? []).map(r => (
+                      <div key={r.id} className="ref-row">
+                        <RefThumb r={r} />
+                        <span style={{ minWidth: 0, flex: 1 }}>
+                          <strong style={{ fontSize: 13 }}>{r.title}</strong>
+                          {r.note && <span className="meta" style={{ display: 'block' }}>{r.note}</span>}
+                        </span>
+                        <button className="btn btn-ghost btn-sm" aria-label={`Elimina la reference ${r.title}`} onClick={() => removeRef(r)}><IconTrash size={14} /></button>
+                      </div>
+                    ))}
+                    <button className="btn btn-soft btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setRefFor(v.position)}>
+                      + Aggiungi reference
+                    </button>
+                  </div>
                   <button className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }}
                     onClick={() => { setReplacing(v.position); setSlot({ kind: 'empty' }) }}>
                     Sostituisci PDF
@@ -173,7 +202,7 @@ export function QuoteEditor() {
 
         <section className="card stack">
           <div>
-            <h2 className="section-title">Lavori da mostrare</h2>
+            <h2 className="section-title">Categoria di evento e lavori da mostrare</h2>
             <p className="meta" style={{ margin: '4px 0 0' }}>
               Scegli il servizio che stai vendendo: il cliente vede girare i lavori di quel servizio.
               Se selezioni dei lavori singoli, vede solo quelli. Gestisci la libreria in <Link to="/lavori">Lavori</Link>.
@@ -230,7 +259,77 @@ export function QuoteEditor() {
           </div>
         </div>
       )}
+      {refFor !== null && (
+        <RefModal quoteId={quote.id} position={refFor} versionName={versions.find(v => v.position === refFor)?.name ?? ''}
+          onClose={() => setRefFor(null)}
+          onSaved={r => {
+            setVersions(vs => vs.map(v => (v.position === refFor ? { ...v, references: [...(v.references ?? []), r] } : v)))
+            setRefFor(null)
+            toast.show('Reference aggiunta')
+          }} />
+      )}
       {toast.node}
     </>
+  )
+}
+
+function RefThumb({ r }: { r: Reference }) {
+  if (r.media_type === 'image') return <img className="ref-thumb" src={r.media_url} alt="" />
+  if (r.media_type === 'video') return <video className="ref-thumb" src={r.media_url} muted playsInline preload="metadata" />
+  return <span className="ref-thumb ref-thumb-link">Link</span>
+}
+
+// Pop-up per caricare una reference (immagine, video o link) su un pacchetto
+function RefModal({ quoteId, position, versionName, onClose, onSaved }: {
+  quoteId: string; position: number; versionName: string; onClose: () => void; onSaved: (r: Reference) => void
+}) {
+  const [title, setTitle] = useState('')
+  const [note, setNote] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [link, setLink] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault()
+    if (!file && !link.trim()) return setError('Carica un file oppure incolla un link.')
+    setBusy(true)
+    setError(null)
+    try {
+      const media_type: Reference['media_type'] = file ? (file.type.startsWith('video') ? 'video' : 'image') : /\.(mp4|webm|mov)(\?|$)/i.test(link) ? 'video' : /\.(png|jpe?g|gif|webp|avif)(\?|$)/i.test(link) ? 'image' : 'link'
+      const media_url = file ? await uploadMedia(file, `references/${quoteId}`) : link.trim()
+      const r = await addReference({ quote_id: quoteId, version_position: position, title: title.trim() || 'Reference', note: note.trim() || null, media_url, media_type })
+      onSaved(r)
+    } catch (err) {
+      setError((err as Error).message)
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="modal-scrim" onClick={() => !busy && onClose()}>
+      <form className="modal stack" onClick={e => e.stopPropagation()} onSubmit={save}>
+        <h2 className="section-title">Reference per {versionName}</h2>
+        <p className="meta" style={{ margin: 0 }}>Il cliente la vede dentro questo pacchetto, sotto le voci.</p>
+        <label className="field"><span>Titolo</span>
+          <input className="input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Es. Mood del video recap" required />
+        </label>
+        <label className="field"><span>Nota (facoltativa)</span>
+          <input className="input" value={note} onChange={e => setNote(e.target.value)} placeholder="Es. Stesso taglio, 60 secondi, musica up-beat" />
+        </label>
+        <label className="field"><span>File (immagine o video)</span>
+          <input type="file" accept="image/*,video/mp4,video/webm,video/quicktime" onChange={e => setFile(e.target.files?.[0] ?? null)} />
+        </label>
+        <label className="field"><span>…oppure un link</span>
+          <input className="input" value={link} onChange={e => setLink(e.target.value)} placeholder="https://…" disabled={!!file} />
+        </label>
+        {error && <div className="pill pill-danger" style={{ whiteSpace: 'normal' }}>{error}</div>}
+        <div className="row">
+          <div className="spacer" />
+          <button type="button" className="btn btn-ghost" onClick={onClose} disabled={busy}>Annulla</button>
+          <button className="btn" disabled={busy}>{busy ? 'Carico…' : 'Aggiungi'}</button>
+        </div>
+      </form>
+    </div>
   )
 }

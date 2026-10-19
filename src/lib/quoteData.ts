@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Category, Quote, Version, Work, PublicQuote } from './types'
+import type { Category, Quote, Reference, Version, Work, PublicQuote } from './types'
 
 export const DEFAULT_VERSIONS = [
   { position: 1, name: 'Essential', tagline: "L'essenziale per partire" },
@@ -23,6 +23,8 @@ export async function loadQuote(id: string) {
     .order('position')
   if (vErr) throw vErr
   const { data: picked } = await supabase.from('quote_works').select('work_id').eq('quote_id', id)
+  const { data: refs } = await supabase.from('quote_references').select('*').eq('quote_id', id).order('position').order('created_at')
+  for (const v of versions) v.references = (refs ?? []).filter(r => r.version_position === v.position) as Reference[]
   for (const v of versions) for (const s of v.sections) s.items.sort((a: { position: number }, b: { position: number }) => a.position - b.position)
   return {
     quote: quote as Quote,
@@ -122,4 +124,23 @@ export async function buildPreview(id: string): Promise<PublicQuote> {
       ? works.filter(w => w.service && quote.services.includes(w.service))
       : works.filter(w => w.categories.some(c => used.has(c)))
   return { quote, categories, versions, works: shown }
+}
+
+// Carica un file (immagine o video) nello storage e restituisce il link pubblico
+export async function uploadMedia(file: File, folder: string) {
+  const path = `${folder}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, '_')}`
+  const { error } = await supabase.storage.from('works').upload(path, file, { contentType: file.type })
+  if (error) throw error
+  return supabase.storage.from('works').getPublicUrl(path).data.publicUrl
+}
+
+export async function addReference(ref: Omit<Reference, 'id'> & { quote_id: string; version_position: number }) {
+  const { data, error } = await supabase.from('quote_references').insert(ref).select().single()
+  if (error) throw error
+  return data as Reference
+}
+
+export async function deleteReference(id: string) {
+  const { error } = await supabase.from('quote_references').delete().eq('id', id)
+  if (error) throw error
 }

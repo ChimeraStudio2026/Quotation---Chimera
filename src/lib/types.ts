@@ -29,6 +29,7 @@ export type Version = {
   discount: number
   vat_pct: number
   sections: Section[]
+  references?: Reference[]
 }
 
 export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'accepted'
@@ -77,3 +78,14 @@ export type PublicQuote = {
 
 // Le linee di servizio di Chimera, come sul sito
 export const SERVICES = ['Event Coverage', 'Live Content Creation', 'Social Production', 'Big Production'] as const
+
+// Reference caricata dal team e collegata a un pacchetto (livello 1, 2 o 3)
+export type Reference = {
+  id: string
+  quote_id?: string
+  version_position?: number
+  title: string
+  note: string | null
+  media_url: string
+  media_type: 'image' | 'video' | 'link'
+}

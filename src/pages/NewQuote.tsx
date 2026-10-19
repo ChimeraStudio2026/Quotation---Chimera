@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { loadCategories, loadQuote, saveQuote } from '../lib/quoteData'
 import { headerFromPdf, versionFromPdf } from '../lib/fromPdf'
-import type { Category } from '../lib/types'
+import { SERVICES, type Category } from '../lib/types'
 import { PdfSlot, type SlotState } from '../components/PdfSlot'
 
 const LEVELS = [
@@ -18,6 +18,7 @@ export function NewQuote() {
   const [slots, setSlots] = useState<SlotState[]>([{ kind: 'empty' }, { kind: 'empty' }, { kind: 'empty' }])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [services, setServices] = useState<string[]>([])
 
   useEffect(() => { loadCategories().then(setCats).catch(e => setError(e.message)) }, [])
 
@@ -31,7 +32,7 @@ export function NewQuote() {
     try {
       // Cliente e progetto dal PDF centrale
       const main = parsed[1]!
-      const { data, error } = await supabase.from('quotes').insert(headerFromPdf(main)).select().single()
+      const { data, error } = await supabase.from('quotes').insert({ ...headerFromPdf(main), services }).select().single()
       if (error) throw error
       const { quote } = await loadQuote(data.id)
       const versions = parsed.map((p, i) => versionFromPdf(p!, i + 1, cats))
@@ -62,12 +63,28 @@ export function NewQuote() {
         ))}
       </div>
 
+      <section className="card stack" style={{ marginTop: 24 }}>
+        <div>
+          <h2 className="section-title">Che categoria di evento è?</h2>
+          <p className="meta" style={{ margin: '4px 0 0' }}>Il cliente vede girare i nostri lavori di questa categoria. Puoi sceglierne più di una e cambiarla dopo.</p>
+        </div>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+          {SERVICES.map(sv => {
+            const on = services.includes(sv)
+            return (
+              <button key={sv} type="button" className={`chip ${on ? 'on' : ''}`} aria-pressed={on}
+                onClick={() => setServices(p => (on ? p.filter(x => x !== sv) : [...p, sv]))}>{sv}</button>
+            )
+          })}
+        </div>
+      </section>
+
       {error && <div className="pill pill-danger" style={{ marginTop: 16, whiteSpace: 'normal' }}>{error}</div>}
 
       <div className="row" style={{ marginTop: 24 }}>
-        <span className="meta">{ready ? 'Tutti e 3 i PDF sono stati letti.' : `Mancano ${slots.filter(s => s.kind !== 'ok').length} PDF.`}</span>
+        <span className="meta">{ready ? (services.length ? 'Tutti e 3 i PDF sono stati letti.' : 'PDF letti. Scegli anche la categoria di evento.') : `Mancano ${slots.filter(s => s.kind !== 'ok').length} PDF.`}</span>
         <div className="spacer" />
-        <button className="btn btn-lg btn-nova" disabled={!ready || busy} onClick={create}>{busy ? 'Creo la quotation…' : 'Crea quotation'}</button>
+        <button className="btn btn-lg btn-nova" disabled={!ready || !services.length || busy} onClick={create}>{busy ? 'Creo la quotation…' : 'Crea quotation'}</button>
       </div>
     </>
   )
