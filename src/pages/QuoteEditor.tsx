@@ -271,6 +271,14 @@ export function QuoteEditor() {
           <h2 className="section-title">Messaggio per il cliente</h2>
           <textarea className="textarea" value={quote.intro ?? ''} onChange={e => setQ({ intro: e.target.value })}
             placeholder="Facoltativo: due righe sul progetto, il cliente le legge in apertura." />
+          <label className="field"><span>Email del cliente</span>
+            <input className="input" type="email" value={quote.client_email ?? ''} onChange={e => setQ({ client_email: e.target.value })}
+              placeholder="nome@azienda.it" />
+          </label>
+          <p className="meta" style={{ margin: 0 }}>
+            Quando il cliente sceglie una versione, arriva una mail a Chimera e una conferma a questo indirizzo (il cliente può correggerlo).
+            {quote.chosen_email && quote.chosen_email !== quote.client_email ? ` Il cliente ha indicato: ${quote.chosen_email}.` : ''}
+          </p>
         </section>
 
         <div className="row">

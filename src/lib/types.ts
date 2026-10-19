@@ -41,6 +41,8 @@ export type Quote = {
   client_name: string
   client_vat: string | null
   client_address: string | null
+  client_email: string | null
+  chosen_email?: string | null
   intro: string | null
   services: string[]
   quote_date: string

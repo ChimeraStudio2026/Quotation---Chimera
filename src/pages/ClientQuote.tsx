@@ -304,15 +304,24 @@ function Totals({ v }: { v: Version }) {
 
 function ChooseModal({ version, token, onClose, onDone }: { version: Version & { id: string }; token: string; onClose: () => void; onDone: () => void }) {
   const [note, setNote] = useState('')
+  const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const t = versionTotals(version)
+  const emailOk = !email.trim() || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())
+
+  // Precompilo con l'email che l'account ha messo nella quotation
+  useEffect(() => {
+    supabase.rpc('get_public_client_email', { p_token: token }).then(({ data }) => { if (typeof data === 'string') setEmail(e => e || data) })
+  }, [token])
 
   async function confirm() {
     setBusy(true)
-    const { data, error } = await supabase.rpc('choose_quote_version', { p_token: token, p_version_id: version.id, p_note: note || null })
+    const { data, error } = await supabase.rpc('submit_quote_choice', { p_token: token, p_version_id: version.id, p_note: note || null, p_email: email.trim() || null })
+    if (error || !data) { setBusy(false); return setError('Non siamo riusciti a registrare la scelta. Riprova o scrivi al tuo account.') }
+    // Mail a Chimera e conferma al cliente: se l'invio non va, la scelta resta comunque registrata
+    await supabase.functions.invoke('notify-choice', { body: { token } }).catch(() => null)
     setBusy(false)
-    if (error || !data) return setError('Non siamo riusciti a registrare la scelta. Riprova o scrivi al tuo account.')
     onDone()
   }
 
@@ -326,6 +335,9 @@ function ChooseModal({ version, token, onClose, onDone }: { version: Version & {
         <p className="muted" style={{ margin: 0 }}>
           Diciamo al tuo account Chimera quale versione hai scelto. Ti ricontatta per la conferma d'ordine e i prossimi passi.
         </p>
+        <label className="field"><span>La tua email, per la conferma</span>
+          <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="nome@azienda.it" />
+        </label>
         <label className="field"><span>Vuoi aggiungere qualcosa? (opzionale)</span>
           <textarea className="textarea" value={note} onChange={e => setNote(e.target.value)} placeholder="Date, richieste, domande…" />
         </label>
@@ -333,7 +345,7 @@ function ChooseModal({ version, token, onClose, onDone }: { version: Version & {
         <div className="row">
           <div className="spacer" />
           <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Annulla</button>
-          <button className="btn btn-nova" onClick={confirm} disabled={busy}>{busy ? 'Invio…' : 'Invia la scelta a Chimera'}</button>
+          <button className="btn btn-nova" onClick={confirm} disabled={busy || !emailOk}>{busy ? 'Invio…' : 'Invia la scelta a Chimera'}</button>
         </div>
       </div>
     </div>

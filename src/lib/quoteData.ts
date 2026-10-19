@@ -46,10 +46,10 @@ export async function createQuote(fields: Partial<Quote>) {
 // Salva testata, versioni, sezioni e voci. Le sezioni vengono riscritte da zero a ogni salvataggio.
 // Le richieste sono raggruppate e le versioni salvate in parallelo, così il salvataggio resta veloce.
 export async function saveQuote(quote: Quote, versions: Version[], pickedWorks: string[]) {
-  const { id, code, title, client_name, client_vat, client_address, intro, services, quote_date, validity_days } = quote
+  const { id, code, title, client_name, client_vat, client_address, client_email, intro, services, quote_date, validity_days } = quote
   const header = supabase
     .from('quotes')
-    .update({ code, title, client_name, client_vat, client_address, intro, services, quote_date, validity_days })
+    .update({ code, title, client_name, client_vat, client_address, client_email: client_email?.trim() || null, intro, services, quote_date, validity_days })
     .eq('id', id)
     .then(check)
   const works = supabase.from('quote_works').delete().eq('quote_id', id).then(check).then(() =>
