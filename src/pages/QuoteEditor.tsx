@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { appUrl, supabase } from '../lib/supabase'
-import { addReference, deleteReference, loadCategories, loadQuote, loadWorks, saveQuote, uploadMedia } from '../lib/quoteData'
+import { DEFAULT_VERSIONS, addReference, deleteReference, loadCategories, loadQuote, loadWorks, saveQuote, uploadMedia } from '../lib/quoteData'
 import { fmtDate, isIncluded, money, sectionTotal, versionTotals } from '../lib/calc'
 import { headerFromPdf, versionFromPdf } from '../lib/fromPdf'
 import { SERVICES, type Category, type Quote, type Reference, type Version, type Work } from '../lib/types'
@@ -69,10 +69,12 @@ export function QuoteEditor() {
     if (slot.kind !== 'ok' || replacing === null) return
     const old = versions.find(v => v.position === replacing)
     const next = versionFromPdf(slot.parsed, replacing, cats, old?.name)
-    const nextVersions = versions.map(v => (v.position === replacing ? next : v))
+    // Sostituisce il livello se c'è già, altrimenti lo aggiunge
+    const nextVersions = (old ? versions.map(v => (v.position === replacing ? next : v)) : [...versions, next])
+      .sort((a, b) => a.position - b.position)
     // Il PDF centrale aggiorna anche cliente e progetto
     const nextQuote = replacing === 2 ? { ...quote!, ...headerFromPdf(slot.parsed) } : quote!
-    if (await persist(nextQuote, nextVersions, picked, `${next.name} aggiornata dal PDF`)) {
+    if (await persist(nextQuote, nextVersions, picked, old ? `${next.name} aggiornata dal PDF` : `${next.name} aggiunta`)) {
       setReplacing(null)
       setSlot({ kind: 'empty' })
     }
@@ -103,6 +105,16 @@ export function QuoteEditor() {
     const { error } = await supabase.from('quotes').delete().eq('id', quote!.id)
     if (error) toast.show(error.message)
     else navigate('/')
+  }
+
+  // Una quotation può avere 2 o 3 versioni: si può togliere un livello solo se ne restano almeno 2
+  async function removeVersion(v: Version) {
+    if (!v.id || versions.length <= 2) return
+    if (!confirm(`Togliere la versione ${v.name}? Il cliente vedrà solo le altre ${versions.length - 1}.`)) return
+    const { error } = await supabase.from('quote_versions').delete().eq('id', v.id)
+    if (error) return toast.show(`Errore: ${error.message}`)
+    setVersions(vs => vs.filter(x => x.position !== v.position))
+    toast.show(`${v.name} tolta`)
   }
 
   async function removeRef(r: Reference) {
@@ -149,7 +161,7 @@ export function QuoteEditor() {
 
       <div className="stack" style={{ gap: 24 }}>
         <section className="stack">
-          <h2 className="section-title">Le 3 versioni</h2>
+          <h2 className="section-title">Le {versions.length} versioni</h2>
           <div className="slots">
             {versions.map(v => {
               const t = versionTotals(v)
@@ -190,13 +202,32 @@ export function QuoteEditor() {
                       + Aggiungi reference
                     </button>
                   </div>
-                  <button className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }}
-                    onClick={() => { setReplacing(v.position); setSlot({ kind: 'empty' }) }}>
-                    Sostituisci PDF
-                  </button>
+                  <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+                    <button className="btn btn-outline btn-sm"
+                      onClick={() => { setReplacing(v.position); setSlot({ kind: 'empty' }) }}>
+                      Sostituisci PDF
+                    </button>
+                    {versions.length > 2 && (
+                      <button className="btn btn-ghost btn-sm" onClick={() => removeVersion(v)}>Togli questa versione</button>
+                    )}
+                  </div>
                 </div>
               )
             })}
+            {DEFAULT_VERSIONS.filter(d => !versions.some(v => v.position === d.position)).map(d => (
+              <div key={d.position} className="pdf-slot">
+                <div>
+                  <div className="label subtle">Livello {d.position}</div>
+                  <div className="section-title" style={{ marginTop: 4 }}>{d.name}</div>
+                  <div className="meta">Non incluso: il cliente vede solo {versions.length} versioni.</div>
+                </div>
+                <div className="pdf-drop">
+                  <button className="btn btn-outline btn-sm" onClick={() => { setReplacing(d.position); setSlot({ kind: 'empty' }) }}>
+                    + Aggiungi con un PDF
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -249,8 +280,8 @@ export function QuoteEditor() {
       {replacing !== null && (
         <div className="modal-scrim" onClick={() => slot.kind !== 'reading' && !saving && setReplacing(null)}>
           <div className="modal stack" onClick={e => e.stopPropagation()}>
-            <h2 className="section-title">Sostituisci il PDF di {replacingVersion?.name}</h2>
-            <PdfSlot label={replacingVersion?.name ?? ''} hint={`Livello ${replacing}`} state={slot} onChange={setSlot} />
+            <h2 className="section-title">{replacingVersion ? `Sostituisci il PDF di ${replacingVersion.name}` : `Aggiungi il livello ${replacing}`}</h2>
+            <PdfSlot label={replacingVersion?.name ?? DEFAULT_VERSIONS.find(d => d.position === replacing)?.name ?? ''} hint={`Livello ${replacing}`} state={slot} onChange={setSlot} />
             <div className="row">
               <div className="spacer" />
               <button className="btn btn-ghost" onClick={() => setReplacing(null)} disabled={saving}>Annulla</button>

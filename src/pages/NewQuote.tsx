@@ -22,20 +22,23 @@ export function NewQuote() {
 
   useEffect(() => { loadCategories().then(setCats).catch(e => setError(e.message)) }, [])
 
-  const ready = slots.every(s => s.kind === 'ok')
+  // Servono almeno 2 versioni su 3; un livello lasciato vuoto non viene creato
+  const okCount = slots.filter(s => s.kind === 'ok').length
+  const busyOrError = slots.some(s => s.kind === 'reading' || s.kind === 'error')
+  const ready = okCount >= 2 && !busyOrError
 
   async function create() {
     const parsed = slots.map(s => (s.kind === 'ok' ? s.parsed : null))
-    if (parsed.some(p => !p)) return
+    if (parsed.filter(Boolean).length < 2) return
     setBusy(true)
     setError(null)
     try {
-      // Cliente e progetto dal PDF centrale
-      const main = parsed[1]!
+      // Cliente e progetto dal PDF centrale, o dal primo caricato se il livello 2 manca
+      const main = parsed[1] ?? parsed.find(Boolean)!
       const { data, error } = await supabase.from('quotes').insert({ ...headerFromPdf(main), services }).select().single()
       if (error) throw error
       const { quote } = await loadQuote(data.id)
-      const versions = parsed.map((p, i) => versionFromPdf(p!, i + 1, cats))
+      const versions = parsed.flatMap((p, i) => (p ? [versionFromPdf(p, i + 1, cats)] : []))
       await saveQuote(quote, versions, [])
       navigate(`/quotation/${data.id}`)
     } catch (e) {
@@ -51,7 +54,7 @@ export function NewQuote() {
           <div className="breadcrumb"><Link to="/">Quotation</Link> / Nuova</div>
           <h1 className="page-title">Nuova quotation</h1>
           <p className="muted" style={{ margin: '6px 0 0', maxWidth: 640 }}>
-            Carica i 3 PDF esportati da Cerbero, uno per livello. Leggo voci, prezzi, fee e cliente e preparo la pagina per il cliente.
+            Carica i PDF esportati da Cerbero, uno per livello: 3 versioni, oppure anche solo 2. Leggo voci, prezzi, fee e cliente e preparo la pagina per il cliente.
           </p>
         </div>
       </div>
@@ -82,7 +85,7 @@ export function NewQuote() {
       {error && <div className="pill pill-danger" style={{ marginTop: 16, whiteSpace: 'normal' }}>{error}</div>}
 
       <div className="row" style={{ marginTop: 24 }}>
-        <span className="meta">{ready ? (services.length ? 'Tutti e 3 i PDF sono stati letti.' : 'PDF letti. Scegli anche la categoria di evento.') : `Mancano ${slots.filter(s => s.kind !== 'ok').length} PDF.`}</span>
+        <span className="meta">{busyOrError ? 'Controlla i PDF qui sopra.' : okCount < 2 ? `Carica almeno ${2 - okCount === 2 ? '2 PDF' : 'un altro PDF'}.` : !services.length ? `${okCount} PDF letti. Scegli anche la categoria di evento.` : `${okCount} PDF letti: la quotation avrà ${okCount} versioni.`}</span>
         <div className="spacer" />
         <button className="btn btn-lg btn-nova" disabled={!ready || !services.length || busy} onClick={create}>{busy ? 'Creo la quotation…' : 'Crea quotation'}</button>
       </div>
