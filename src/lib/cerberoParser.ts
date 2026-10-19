@@ -6,7 +6,7 @@ export type Tok = { x: number; y: number; h: number; s: string }
 export type PdfPage = { width: number; height: number; toks: Tok[] }
 
 export type ParsedItem = { code: string | null; job: string; note: string | null; qty: number; days: number; unit_price: number; nic_pct: number }
-export type ParsedSection = { letter: string; note: string | null; extras: number; items: ParsedItem[]; noteUnreadable?: { page: number; x0: number; x1: number; y: number; h: number } }
+export type ParsedSection = { letter: string; note: string | null; extras: number; items: ParsedItem[]; summary?: { name: string | null; price: number }; noteUnreadable?: { page: number; x0: number; x1: number; y: number; h: number } }
 export type ParsedQuote = {
   code: string | null
   title: string
@@ -108,16 +108,21 @@ function parseSummary(page: PdfPage, pageIndex: number, q: ParsedQuote) {
   const subIdx = subLine ? ls.indexOf(subLine) : -1
   const feeLine = ls.slice(subIdx + 1, subIdx + 4).find(l => l.toks.some(t => /^\d+([.,]\d+)?%$/.test(t.s.trim())))
   const feeTok = feeLine?.toks.find(t => /%$/.test(t.s.trim()))
-  if (feeTok) q.production_fee_pct = num(feeTok.s) ?? q.production_fee_pct
   q.discount = Math.abs(num(findLine(ls, /DISCOUNT/)?.toks.find(t => /€/.test(t.s))?.s) ?? 0)
   const totalLine = ls.find(l => /^TOTAL\b/.test(l.text) && !/TOTAL\+IVA/.test(l.text))
   q.totals.total = num(totalLine?.toks.find(t => /€/.test(t.s))?.s)
+  if (feeTok) q.production_fee_pct = num(feeTok.s) ?? q.production_fee_pct
+  // Senza riga della fee la ricavo dai totali (spesso è 0: totale = subtotale − sconto)
+  else if (q.totals.subtotal && q.totals.total != null) {
+    q.production_fee_pct = Math.max(0, Math.round(((q.totals.total + q.discount - q.totals.subtotal) / q.totals.subtotal) * 10000) / 100)
+  }
   q.totals.totalVat = num(findLine(ls, /TOTAL\+IVA/)?.toks.find(t => /€/.test(t.s))?.s)
   if (q.totals.total && q.totals.totalVat) q.vat_pct = Math.round((q.totals.totalVat / q.totals.total - 1) * 100)
 
   // Righe A–O: quali sono incluse e con che nota
   if (header < 0) return
   const h = ls[header]
+  const itemX = h.toks.find(t => t.s.trim() === 'ITEM')?.x ?? 0
   const noteX = h.toks.find(t => t.s.trim() === 'NOTE')!.x
   const priceX = h.toks.find(t => t.s.trim() === 'PRICE')?.x ?? W * 0.8
   const extrasX = h.toks.find(t => t.s.trim() === 'EXTRAS')?.x ?? W * 0.9
@@ -136,10 +141,15 @@ function parseSummary(page: PdfPage, pageIndex: number, q: ParsedQuote) {
     if (!letter) return
     const note = notes[i]
     const extras = Math.abs(num(r.toks.find(t => t.x >= extrasX - 60)?.s) ?? 0)
-    const included = note && note !== notIncl && !/^not[-\s]?incl/i.test(note)
+    // Prezzo leggibile della riga (nei PDF col font offuscato non lo è, e restano le pagine di dettaglio)
+    const priceTok = r.toks.find(t => t.x >= priceX - 150 && t.x < extrasX - 60 && isNum(t.s))
+    const price = Math.abs(num(priceTok?.s) ?? 0)
+    const hasNote = !!note && note !== notIncl && !/^not[-\s]?incl/i.test(note)
+    const included = hasNote || price > 0
     if (!included && !extras) return
-    const sec: ParsedSection = { letter, note: null, extras, items: [] }
-    if (included) {
+    const name = r.toks.filter(t => t.x >= itemX - 10 && t.x < noteX - 10).map(t => t.s.trim()).join(' ').trim()
+    const sec: ParsedSection = { letter, note: null, extras, items: [], summary: price > 0 ? { name: readable(name) ? name : null, price } : undefined }
+    if (hasNote) {
       if (readable(note)) sec.note = note
       else {
         const toks = r.toks.filter(t => t.x >= noteX - 10 && t.x < priceX - 150)
@@ -220,6 +230,15 @@ export function parseCerbero(pages: PdfPage[]): ParsedQuote {
     if (sec) parseDetail(p, sec[1], q)
   })
   q.sections.sort((a, b) => LETTERS.indexOf(a.letter) - LETTERS.indexOf(b.letter))
+
+  // Sezioni senza pagina di dettaglio: una voce sola con il prezzo del riepilogo
+  for (const sec of q.sections) {
+    if (!sec.items.length && sec.summary) {
+      const n = sec.summary.name
+      sec.items.push({ code: null, job: n ? n[0] + n.slice(1).toLowerCase() : '—', note: sec.note, qty: 1, days: 1, unit_price: sec.summary.price, nic_pct: 0 })
+    }
+    delete sec.summary
+  }
 
   if (!q.title) q.warnings.push('Non trovo il titolo del preventivo: è un PDF esportato da Cerbero?')
   if (!q.sections.length) q.warnings.push('Non trovo nessuna voce nel PDF.')
