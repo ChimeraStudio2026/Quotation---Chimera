@@ -43,13 +43,9 @@ export function PreviewQuotePage() {
 const STICKERS: [string, string][] = [
   ['burst-purple', 'st-bg'],
   ['burst-purple', 'st-purple-burst'],
-  ['star-red', 'st-red-star'],
-  ['burst-blue', 'st-blue-burst'],
   ['mic-green', 'st-mic'],
   ['bubble-blue', 'st-blue-bubble'],
-  ['star-purple', 'st-purple-star'],
   ['bubble-purple', 'st-purple-bubble'],
-  ['star-yellow', 'st-yellow-star'],
 ]
 
 // Il titolo va a capo dopo il primo " - " (cliente - progetto), come nel design
@@ -77,6 +73,8 @@ function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
   return (
     <div className="client">
       <div className="hero-wrap">
+        {/* La stella gialla esce dalla testata, in alto a destra */}
+        <img className="sticker st-yellow-star" src={asset('stickers/star-yellow.svg')} alt="" aria-hidden />
         <header className="hero">
           {STICKERS.map(([file, cls], i) => <img key={i} className={`sticker ${cls}`} src={asset(`stickers/${file}.svg`)} alt="" aria-hidden />)}
           <div className="hero-top">

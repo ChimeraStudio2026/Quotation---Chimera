@@ -208,7 +208,7 @@ img, video { display: block; max-width: 100%; }
 
 /* ---------- Vista cliente ---------- */
 .client { background: var(--surface-panel); min-height: 100vh; overflow-x: clip; }
-.hero-wrap { padding: 10px; }
+.hero-wrap { padding: 10px; position: relative; }
 .hero {
   position: relative; overflow: hidden; background: var(--surface-app); color: var(--ink);
   border-radius: var(--radius-panel); padding: 40px 56px 64px;
@@ -232,19 +232,13 @@ img, video { display: block; max-width: 100%; }
 .sticker-inline { display: inline-block; width: clamp(56px, 7vw, 100px); vertical-align: middle; margin-left: 12px; --r: -10deg; }
 .st-bg { left: -220px; top: -260px; width: 1100px; opacity: .5; --r: -10deg; }
 .st-purple-burst { right: -70px; bottom: -90px; width: 320px; --r: 12deg; }
-.st-red-star { right: 150px; top: 24px; width: 280px; --r: -8deg; }
-.st-blue-burst { right: 359px; top: 191px; width: 82px; --r: -6deg; }
 .st-mic { right: 420px; top: 24px; width: 110px; --r: -12deg; }
 .st-blue-bubble { right: 225px; top: 289px; width: 130px; --r: 10deg; }
-.st-purple-star { right: 600px; bottom: 10px; width: 140px; --r: -16deg; }
 .st-purple-bubble { right: 404px; bottom: 119px; width: 96px; --r: 6deg; }
-.st-yellow-star { right: -78px; bottom: -28px; width: 247px; --r: -20deg; }
+.st-yellow-star { right: -123px; top: -225px; width: 399px; z-index: 2; --r: 14deg; }
 /* Adesivi animati come sul sito: le stelle girano piano, gli altri fluttuano */
 .sticker, .sticker-inline { transform: rotate(var(--r, 0deg)); }
-.st-bg, .st-purple-burst, .st-red-star, .st-blue-burst, .st-purple-star, .st-yellow-star { animation: st-spin 60s linear infinite; }
-.st-red-star { animation-duration: 38s; }
-.st-blue-burst { animation-duration: 24s; animation-direction: reverse; }
-.st-purple-star { animation-duration: 30s; animation-direction: reverse; }
+.st-bg, .st-purple-burst, .st-yellow-star { animation: st-spin 60s linear infinite; }
 .st-yellow-star { animation-duration: 45s; }
 .st-bg { animation-duration: 120s; }
 .st-mic, .st-blue-bubble, .st-purple-bubble, .sticker-inline { animation: st-float 5s ease-in-out infinite; }
@@ -340,8 +334,7 @@ img, video { display: block; max-width: 100%; }
   .hero { padding: 28px 20px 40px; }
   .hero-top { margin-bottom: 36px; }
   .st-bg { width: 700px; left: -260px; top: -200px; }
-  .st-red-star { right: -30px; top: -20px; width: 130px; }
-  .st-yellow-star { right: -50px; bottom: -40px; width: 120px; }
+  .st-yellow-star { right: -60px; top: -90px; width: 170px; }
   .st-purple-burst, .st-mic, .st-blue-bubble { display: none; }
   .client-main { padding: 48px 16px 32px; }
   .options { grid-template-columns: 1fr; }
