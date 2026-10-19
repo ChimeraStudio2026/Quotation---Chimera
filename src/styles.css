@@ -443,3 +443,5 @@ img, video { display: block; max-width: 100%; }
 .ref-card figcaption { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
 .ref-link { display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: var(--radius-lg); background: var(--nova-soft); color: var(--nova-ink); font-weight: 700; text-decoration: none; }
 @media (max-width: 960px) { .refs { padding: 4px 20px 24px; } }
+
+.works-pick { margin-top: 8px; padding-top: 20px; border-top: 1px solid var(--border); }

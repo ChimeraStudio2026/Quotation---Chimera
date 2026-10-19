@@ -229,11 +229,11 @@ export function QuoteEditor() {
               </div>
             ))}
           </div>
-        </section>
 
-        <section className="card stack">
+          {/* Lavori da mostrare: stessa sezione delle versioni, sotto le card */}
+          <div className="works-pick stack">
           <div>
-            <h2 className="section-title">Categoria di evento e lavori da mostrare</h2>
+            <h3 className="section-title">Categoria di evento e lavori da mostrare</h3>
             <p className="meta" style={{ margin: '4px 0 0' }}>
               Scegli il servizio che stai vendendo: il cliente vede girare i lavori di quel servizio.
               Se selezioni dei lavori singoli, vede solo quelli. Gestisci la libreria in <Link to="/lavori">Lavori</Link>.
@@ -264,6 +264,7 @@ export function QuoteEditor() {
               })}
             </div>
           </details>
+          </div>
         </section>
 
         <section className="card stack">
