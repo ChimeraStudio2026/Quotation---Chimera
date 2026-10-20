@@ -2,7 +2,7 @@
 // La chiama la pagina cliente subito dopo submit_quote_choice; manda una sola volta per scelta.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 
-const APP_URL = Deno.env.get('APP_URL') ?? 'https://jeck-svg.github.io/preventivi-chimera'
+const APP_URL = Deno.env.get('APP_URL') ?? 'https://quotation.chimerastudioss.com'
 const FROM = Deno.env.get('MAIL_FROM') ?? 'Chimera Studio <onboarding@resend.dev>'
 const NOTIFY_TO = (Deno.env.get('NOTIFY_TO') ?? 'jeck@chimerastudioss.com').split(',').map(s => s.trim()).filter(Boolean)
 
