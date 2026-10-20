@@ -98,7 +98,7 @@ export function draftToVersions(draft: Draft, cats: Category[], current: Version
             qty: n(i.qty) || 1,
             days: n(i.days) || 1,
             unit_price: i.customUnitPrice !== null ? n(i.customUnitPrice) : entry?.dailyPrice ?? 0,
-            nic_pct: 0,
+            nic_pct: entry?.defaultNic ?? 0,
             // Costo interno dal listino; le voci libere (budget) restano senza costo finché non lo metti a mano
             unit_cost: entry ? entry.dailyCost : null,
           }

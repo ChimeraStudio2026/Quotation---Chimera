@@ -44,5 +44,5 @@ Ogni categoria usata ha una nota di riepilogo che il cliente legge, nello stile 
 - reply: due o tre frasi in italiano su cosa hai impostato o cambiato e sulle ipotesi fatte. Niente elenchi lunghi: le voci si vedono già nell'app.
 - Scrivi JOB, note di categoria, nomi e tagline delle versioni in inglese, come nei preventivi Chimera; reply e openQuestions in italiano.
 
-## Listino (nome | categorie ammesse | prezzo giornaliero € | prezzo notturno € | orario)
+## Listino (nome | categorie ammesse | orario | NIC % | prezzo giornaliero € | prezzo notturno €)
 ${listinoForPrompt()}`
