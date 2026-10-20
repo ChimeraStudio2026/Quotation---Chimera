@@ -30,7 +30,7 @@ export function Login({ wrongAccount }: { wrongAccount: boolean }) {
         )}
         <label className="field"><span>Codice del team</span>
           <input className="input" type="password" autoComplete="current-password" value={code} onChange={e => setCode(e.target.value)}
-            placeholder="chimera-…" required autoFocus />
+            placeholder="Codice del team" required autoFocus />
         </label>
         {msg && <div className="pill pill-warning" style={{ whiteSpace: 'normal', padding: '8px 12px' }}>{msg}</div>}
         <button className="btn btn-lg" disabled={busy}>{busy ? 'Controllo…' : 'Entra'}</button>
