@@ -265,17 +265,25 @@ function VersionSections({ version, catOf }: { version: Version; catOf: (c: stri
 // Le reference che il team ha caricato per questo pacchetto
 function VersionReferences({ version }: { version: Version }) {
   const refs = version.references ?? []
+  const [open, setOpen] = useState<number | null>(null)
   if (!refs.length) return null
+  // Immagini e video si aprono a schermo intero; i link in una nuova scheda
+  const media = refs.filter(r => r.media_type !== 'link')
   return (
     <div className="refs">
       <div className="label subtle">Reference per {version.name}</div>
       <div className="refs-grid">
         {refs.map(r => (
           <figure key={r.id} className="ref-card">
-            {r.media_type === 'image' && <img src={r.media_url} alt={r.title} loading="lazy" />}
-            {r.media_type === 'video' && <video src={r.media_url} muted loop playsInline autoPlay controls={false} />}
-            {r.media_type === 'link' && (
+            {r.media_type === 'link' ? (
               <a className="ref-link" href={r.media_url} target="_blank" rel="noreferrer">Apri la reference →</a>
+            ) : (
+              <button type="button" className="ref-open" aria-label={`Guarda ${r.title} a schermo intero`} onClick={() => setOpen(media.indexOf(r))}>
+                {r.media_type === 'image'
+                  ? <img src={r.media_url} alt={r.title} loading="lazy" />
+                  : <video src={r.media_url} muted loop playsInline autoPlay controls={false} />}
+                <span className="ref-expand" aria-hidden>⤢</span>
+              </button>
             )}
             <figcaption>
               <strong>{r.title}</strong>
@@ -284,6 +292,47 @@ function VersionReferences({ version }: { version: Version }) {
           </figure>
         ))}
       </div>
+      {open !== null && media[open] && <RefLightbox refs={media} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />}
+    </div>
+  )
+}
+
+function RefLightbox({ refs, index, onIndex, onClose }: { refs: NonNullable<Version['references']>; index: number; onIndex: (i: number) => void; onClose: () => void }) {
+  const r = refs[index]
+  const many = refs.length > 1
+  const go = (d: number) => onIndex((index + d + refs.length) % refs.length)
+
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+      if (many && e.key === 'ArrowRight') go(1)
+      if (many && e.key === 'ArrowLeft') go(-1)
+    }
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', key)
+    return () => { window.removeEventListener('keydown', key); document.body.style.overflow = overflow }
+  })
+
+  return (
+    <div className="lightbox" role="dialog" aria-modal="true" aria-label={r.title} onClick={onClose}>
+      <button type="button" className="lightbox-close" aria-label="Chiudi" onClick={onClose}>✕</button>
+      <div className="lightbox-media" onClick={e => e.stopPropagation()}>
+        {r.media_type === 'image'
+          ? <img key={r.id} src={r.media_url} alt={r.title} />
+          : <video key={r.id} src={r.media_url} controls autoPlay playsInline />}
+      </div>
+      <div className="lightbox-caption" onClick={e => e.stopPropagation()}>
+        <strong>{r.title}</strong>
+        {r.note && <span>{r.note}</span>}
+        {many && <span className="lightbox-count">{index + 1} / {refs.length}</span>}
+      </div>
+      {many && (
+        <>
+          <button type="button" className="lightbox-nav prev" aria-label="Precedente" onClick={e => { e.stopPropagation(); go(-1) }}>‹</button>
+          <button type="button" className="lightbox-nav next" aria-label="Successiva" onClick={e => { e.stopPropagation(); go(1) }}>›</button>
+        </>
+      )}
     </div>
   )
 }
