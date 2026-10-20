@@ -8,6 +8,7 @@ import { Dashboard } from './pages/Dashboard'
 import { QuoteEditor } from './pages/QuoteEditor'
 import { NewQuote } from './pages/NewQuote'
 import { Works } from './pages/Works'
+import { Assistant } from './pages/Assistant'
 import { ClientQuotePage, PreviewQuotePage } from './pages/ClientQuote'
 
 export function App() {
@@ -41,6 +42,7 @@ function TeamArea() {
         <Route path="nuova" element={<NewQuote />} />
         <Route path="quotation/:id" element={<QuoteEditor />} />
         <Route path="lavori" element={<Works />} />
+        <Route path="assistente" element={<Assistant />} />
       </Route>
     </Routes>
   )

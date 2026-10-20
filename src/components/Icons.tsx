@@ -33,3 +33,6 @@ export const IconLogout = ({ size }: P) => (
 export const IconStar = ({ size }: P) => (
   <svg {...base(size)}><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" /></svg>
 )
+export const IconSpark = ({ size }: P) => (
+  <svg {...base(size)}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" /></svg>
+)

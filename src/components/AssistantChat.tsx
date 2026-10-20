@@ -22,11 +22,14 @@ type Props = {
   versions: Version[]
   onResult: (result: AssistantResult) => Promise<boolean>
   autoFocus?: boolean
+  /** Brief scritto nella sezione Assistente: parte da solo appena si apre la quotation */
+  initialMessage?: string
 }
 
-export function AssistantChat({ quote, versions, onResult, autoFocus }: Props) {
+export function AssistantChat({ quote, versions, onResult, autoFocus, initialMessage }: Props) {
   const [turns, setTurns] = useState<ChatTurn[]>(() => loadTurns(quote.id))
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(initialMessage ?? '')
+  const sentInitial = useRef(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -40,8 +43,16 @@ export function AssistantChat({ quote, versions, onResult, autoFocus }: Props) {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
   }, [quote.id, turns, sending])
 
-  async function send() {
-    const text = message.trim()
+  useEffect(() => {
+    if (!initialMessage || sentInitial.current || turns.length) return
+    sentInitial.current = true
+    send(initialMessage)
+    // Solo all'apertura: il brief iniziale si invia una volta
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function send(override?: string) {
+    const text = (override ?? message).trim()
     if (!text || sending) return
     setSending(true)
     setError(null)
@@ -90,7 +101,7 @@ export function AssistantChat({ quote, versions, onResult, autoFocus }: Props) {
       <div className="row">
         <span className="meta">Ctrl/⌘ + Invio per inviare</span>
         <div className="spacer" />
-        <button className="btn btn-nova" onClick={send} disabled={sending || !message.trim()}>
+        <button className="btn btn-nova" onClick={() => send()} disabled={sending || !message.trim()}>
           {sending ? 'Attendi…' : 'Invia'}
         </button>
       </div>

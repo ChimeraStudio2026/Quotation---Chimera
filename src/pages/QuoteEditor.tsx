@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { appUrl, supabase } from '../lib/supabase'
 import { DEFAULT_VERSIONS, deleteReference, loadCategories, loadQuote, loadWorks, saveQuote } from '../lib/quoteData'
 import { fmtDate, isIncluded, money, sectionTotal, versionTotals } from '../lib/calc'
@@ -32,6 +32,7 @@ export function QuoteEditor() {
   const [refFor, setRefFor] = useState<number | null>(null)
   const [editing, setEditing] = useState<Version | null>(null)
   const [searchParams] = useSearchParams()
+  const firstMessage = (useLocation().state as { firstMessage?: string } | null)?.firstMessage
 
   useEffect(() => {
     if (!id) return
@@ -194,7 +195,7 @@ export function QuoteEditor() {
       )}
 
       <div className="stack" style={{ gap: 24 }}>
-        <AssistantChat quote={quote} versions={versions} onResult={applyAssistant} autoFocus={searchParams.has('assistente')} />
+        <AssistantChat quote={quote} versions={versions} onResult={applyAssistant} autoFocus={searchParams.has('assistente')} initialMessage={firstMessage} />
 
         <section className="stack">
           <h2 className="section-title">{versions.length === 1 ? 'La versione' : versions.length ? `Le ${versions.length} versioni` : 'Versioni'}</h2>

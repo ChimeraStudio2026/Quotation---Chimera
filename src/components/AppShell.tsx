@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { asset, supabase } from '../lib/supabase'
-import { IconDoc, IconLogout, IconPlay } from './Icons'
+import { IconDoc, IconLogout, IconPlay, IconSpark } from './Icons'
 
 export function AppShell({ email }: { email: string }) {
   return (
@@ -11,6 +11,7 @@ export function AppShell({ email }: { email: string }) {
           Preventivi
         </div>
         <NavLink to="/" end className="nav-link"><IconDoc /> Quotation</NavLink>
+        <NavLink to="/assistente" className="nav-link"><IconSpark /> Assistente</NavLink>
         <NavLink to="/lavori" className="nav-link"><IconPlay /> Lavori</NavLink>
         <div className="sidebar-foot">
           <div className="meta" style={{ marginBottom: 8, wordBreak: 'break-all' }}>{email}</div>
