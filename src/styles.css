@@ -463,3 +463,34 @@ img, video { display: block; max-width: 100%; }
 .lightbox-nav.next { right: 14px; }
 .lightbox-close:hover, .lightbox-nav:hover { background: rgba(255, 255, 255, .24); }
 @media (max-width: 640px) { .lightbox { padding: 56px 12px 20px; } .lightbox-nav { top: auto; bottom: 16px; margin-top: 0; } }
+
+/* Assistente preventivi */
+.assistant-start { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: space-between; margin-bottom: 24px; background: var(--nova-tint); border-color: var(--nova-line); }
+.assistant-messages { display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; padding: 4px; }
+.assistant-msg { max-width: 85%; padding: 10px 14px; border-radius: var(--radius-lg); font-size: 14px; line-height: 20px; white-space: pre-wrap; }
+.assistant-msg.user { align-self: flex-end; background: var(--ink); color: var(--on-dark); }
+.assistant-msg.assistant { align-self: flex-start; background: var(--nova-soft); color: var(--ink); }
+.assistant-msg.pending { color: var(--nova-ink); animation: assistant-pulse 1.4s ease-in-out infinite; }
+@keyframes assistant-pulse { 50% { opacity: .55; } }
+.assistant-example {
+  display: flex; flex-direction: column; gap: 4px; text-align: left; cursor: pointer;
+  padding: 12px 14px; border-radius: var(--radius-md); border: 1px dashed var(--border-strong);
+  background: var(--surface-muted); color: var(--ink-muted); font-size: 14px;
+}
+.assistant-example:hover { border-color: var(--nova-line); color: var(--ink); }
+
+/* Editor voci di una versione */
+.modal-wide { width: min(1100px, 100%); }
+.version-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+.ve-section { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+.ve-note { height: 36px; }
+.ve-table-wrap { overflow-x: auto; }
+.ve-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ve-table th { text-align: left; font-size: 12px; color: var(--ink-subtle); font-weight: 600; padding: 4px; white-space: nowrap; }
+.ve-table td { padding: 4px; vertical-align: middle; }
+.ve-table td:first-child { min-width: 240px; }
+.ve-table td:nth-child(2) { min-width: 140px; }
+.ve-table .input { height: 34px; padding: 0 8px; }
+.ve-table .input.num { width: 84px; text-align: right; }
+.ve-table td.num { text-align: right; white-space: nowrap; font-weight: 600; }
+.ve-footer { position: sticky; bottom: -28px; background: var(--surface-card); padding: 12px 0; border-top: 1px solid var(--border); flex-wrap: wrap; }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { appUrl, supabase } from '../lib/supabase'
 import { DEFAULT_VERSIONS, deleteReference, loadCategories, loadQuote, loadWorks, saveQuote } from '../lib/quoteData'
 import { fmtDate, isIncluded, money, sectionTotal, versionTotals } from '../lib/calc'
@@ -10,8 +10,11 @@ import { PdfSlot, type SlotState } from '../components/PdfSlot'
 import { IconEye, IconLink, IconStar, IconTrash } from '../components/Icons'
 import { useToast } from '../components/Toast'
 import { RefModal, RefThumb } from '../components/References'
+import { AssistantChat } from '../components/AssistantChat'
+import { VersionEditor } from '../components/VersionEditor'
+import { draftToVersions, type AssistantResult } from '../lib/assistant'
 
-// La pagina di una quotation: le 3 versioni vengono dai PDF di Cerbero, qui si sceglie solo cosa mostrare al cliente
+// La pagina di una quotation: le versioni arrivano dai PDF di Cerbero o dall'assistente, e si possono ritoccare voce per voce
 export function QuoteEditor() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -27,6 +30,8 @@ export function QuoteEditor() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [refFor, setRefFor] = useState<number | null>(null)
+  const [editing, setEditing] = useState<Version | null>(null)
+  const [searchParams] = useSearchParams()
 
   useEffect(() => {
     if (!id) return
@@ -65,6 +70,34 @@ export function QuoteEditor() {
   }
 
   const save = () => persist(quote, versions, picked, 'Salvato')
+
+  // L'assistente restituisce la quotation completa: le versioni che non ci sono più vanno tolte
+  async function applyAssistant(result: AssistantResult) {
+    const next = draftToVersions(result.quote, cats, versions)
+    const gone = versions.filter(v => v.id && !next.some(x => x.position === v.position))
+    if (gone.length) {
+      const { error } = await supabase.from('quote_versions').delete().in('id', gone.map(v => v.id!))
+      if (error) {
+        toast.show(`Errore: ${error.message}`)
+        return false
+      }
+    }
+    const d = result.quote
+    const nextQuote: Quote = {
+      ...quote!,
+      title: d.title || quote!.title,
+      client_name: d.clientName || quote!.client_name,
+      client_vat: d.clientVat || quote!.client_vat,
+      client_address: d.clientAddress || quote!.client_address,
+    }
+    return persist(nextQuote, next, picked, 'Quotation aggiornata dall\'assistente')
+  }
+
+  async function saveVersion(v: Version) {
+    const next = (versions.some(x => x.position === v.position) ? versions.map(x => (x.position === v.position ? v : x)) : [...versions, v])
+      .sort((a, b) => a.position - b.position)
+    if (await persist(quote!, next, picked, `${v.name} salvata`)) setEditing(null)
+  }
 
   async function applyReplacement() {
     if (slot.kind !== 'ok' || replacing === null) return
@@ -108,10 +141,10 @@ export function QuoteEditor() {
     else navigate('/')
   }
 
-  // Una quotation può avere 2 o 3 versioni: si può togliere un livello solo se ne restano almeno 2
+  // Una quotation può avere da 1 a 3 versioni: si può togliere un livello finché ne resta almeno uno
   async function removeVersion(v: Version) {
-    if (!v.id || versions.length <= 2) return
-    if (!confirm(`Togliere la versione ${v.name}? Il cliente vedrà solo le altre ${versions.length - 1}.`)) return
+    if (!v.id || versions.length <= 1) return
+    if (!confirm(`Togliere la versione ${v.name}? Il cliente vedrà solo ${versions.length === 2 ? 'l\'altra' : `le altre ${versions.length - 1}`}.`)) return
     const { error } = await supabase.from('quote_versions').delete().eq('id', v.id)
     if (error) return toast.show(`Errore: ${error.message}`)
     setVersions(vs => vs.filter(x => x.position !== v.position))
@@ -161,8 +194,10 @@ export function QuoteEditor() {
       )}
 
       <div className="stack" style={{ gap: 24 }}>
+        <AssistantChat quote={quote} versions={versions} onResult={applyAssistant} autoFocus={searchParams.has('assistente')} />
+
         <section className="stack">
-          <h2 className="section-title">Le {versions.length} versioni</h2>
+          <h2 className="section-title">{versions.length === 1 ? 'La versione' : versions.length ? `Le ${versions.length} versioni` : 'Versioni'}</h2>
           <div className="slots">
             {versions.map(v => {
               const t = versionTotals(v)
@@ -204,11 +239,12 @@ export function QuoteEditor() {
                     </button>
                   </div>
                   <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+                    <button className="btn btn-outline btn-sm" onClick={() => setEditing(v)}>Modifica voci</button>
                     <button className="btn btn-outline btn-sm"
                       onClick={() => { setReplacing(v.position); setSlot({ kind: 'empty' }) }}>
                       Sostituisci PDF
                     </button>
-                    {versions.length > 2 && (
+                    {versions.length > 1 && (
                       <button className="btn btn-ghost btn-sm" onClick={() => removeVersion(v)}>Togli questa versione</button>
                     )}
                   </div>
@@ -220,11 +256,15 @@ export function QuoteEditor() {
                 <div>
                   <div className="label subtle">Livello {d.position}</div>
                   <div className="section-title" style={{ marginTop: 4 }}>{d.name}</div>
-                  <div className="meta">Non incluso: il cliente vede solo {versions.length} versioni.</div>
+                  <div className="meta">Non incluso{versions.length ? `: il cliente vede solo ${versions.length === 1 ? '1 versione' : `${versions.length} versioni`}` : ''}.</div>
                 </div>
                 <div className="pdf-drop">
                   <button className="btn btn-outline btn-sm" onClick={() => { setReplacing(d.position); setSlot({ kind: 'empty' }) }}>
                     + Aggiungi con un PDF
+                  </button>
+                  <button className="btn btn-ghost btn-sm"
+                    onClick={() => setEditing({ ...d, production_fee_pct: 15, discount: 0, vat_pct: 22, sections: [] })}>
+                    + Crea a mano
                   </button>
                 </div>
               </div>
@@ -309,6 +349,7 @@ export function QuoteEditor() {
             toast.show('Reference aggiunta')
           }} />
       )}
+      {editing && <VersionEditor version={editing} cats={cats} onClose={() => setEditing(null)} onSave={saveVersion} />}
       {toast.node}
     </>
   )

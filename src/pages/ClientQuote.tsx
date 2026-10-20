@@ -89,7 +89,9 @@ function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
             <img className="sticker-inline" src={asset('stickers/play-green.svg')} alt="" aria-hidden />
           </h1>
           <p className="lead">
-            {quote.intro?.trim() || `Abbiamo preparato ${versions.length === 2 ? 'due' : 'tre'} versioni per ${quote.client_name}. Aprile, confrontale e scegli quella giusta per il progetto.`}
+            {quote.intro?.trim() || (versions.length === 1
+              ? `Abbiamo preparato la nostra proposta per ${quote.client_name}. Aprila, scopri cosa c'è dentro e confermala.`
+              : `Abbiamo preparato ${versions.length === 2 ? 'due' : 'tre'} versioni per ${quote.client_name}. Aprile, confrontale e scegli quella giusta per il progetto.`)}
           </p>
           <div className="hero-meta">
             <div><span>Per</span>{quote.client_name}</div>
@@ -109,7 +111,7 @@ function QuoteView({ data, token }: { data: PublicQuote; token?: string }) {
 
         <div className="client-section-head">
           <div>
-            <div className="label subtle">{versions.length === 2 ? 'Le due versioni' : 'Le tre versioni'}</div>
+            <div className="label subtle">{versions.length === 1 ? 'La proposta' : versions.length === 2 ? 'Le due versioni' : 'Le tre versioni'}</div>
             <h2 className="page-title" style={{ marginTop: 6 }}>Scegli la tua quotation</h2>
           </div>
         </div>

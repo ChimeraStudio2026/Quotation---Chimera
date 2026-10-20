@@ -39,6 +39,19 @@ export function NewQuote() {
   const busyOrError = slots.some(s => s.kind === 'reading' || s.kind === 'error')
   const ready = okCount >= 2 && !busyOrError
 
+  // Crea una quotation vuota e apre l'editor con la chat dell'assistente
+  async function createWithAssistant() {
+    setBusy(true)
+    setError(null)
+    const { data, error } = await supabase.from('quotes').insert({ title: 'Nuova quotation', client_name: 'Cliente', services }).select('id').single()
+    if (error) {
+      setError(error.message)
+      setBusy(false)
+      return
+    }
+    navigate(`/quotation/${data.id}?assistente`)
+  }
+
   async function create() {
     const parsed = slots.map(s => (s.kind === 'ok' ? s.parsed : null))
     if (parsed.filter(Boolean).length < 2) return
@@ -71,6 +84,16 @@ export function NewQuote() {
           </p>
         </div>
       </div>
+
+      <section className="card assistant-start">
+        <div>
+          <h2 className="section-title">Senza PDF: crea con l'assistente</h2>
+          <p className="meta" style={{ margin: '4px 0 0' }}>
+            Scrivi il brief e quante versioni vuoi: l'assistente prepara voci e prezzi dal listino, poi li ritocchi a mano o in chat.
+          </p>
+        </div>
+        <button className="btn btn-nova" onClick={createWithAssistant} disabled={busy}>Crea con l'assistente</button>
+      </section>
 
       <div className="slots">
         {LEVELS.map((l, i) => (
