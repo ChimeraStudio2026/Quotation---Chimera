@@ -5,7 +5,8 @@ import { loadCategories, loadQuote, loadWorks, saveQuote } from '../lib/quoteDat
 import { headerFromPdf, versionFromPdf } from '../lib/fromPdf'
 import { SERVICES, type Category, type Work } from '../lib/types'
 import { PdfSlot, type SlotState } from '../components/PdfSlot'
-import { IconStar } from '../components/Icons'
+import { IconStar, IconTrash } from '../components/Icons'
+import { RefModal, RefThumb, uploadDrafts, type RefDraft } from '../components/References'
 
 const LEVELS = [
   { position: 1, label: 'Essential', hint: 'Livello 1' },
@@ -24,6 +25,9 @@ export function NewQuote() {
   const [picked, setPicked] = useState<string[]>([])
   const [intro, setIntro] = useState('')
   const [clientEmail, setClientEmail] = useState('')
+  // Reference ad hoc per livello, caricate quando si crea la quotation
+  const [refs, setRefs] = useState<RefDraft[][]>([[], [], []])
+  const [refFor, setRefFor] = useState<number | null>(null)
 
   useEffect(() => {
     loadCategories().then(setCats).catch(e => setError(e.message))
@@ -48,6 +52,7 @@ export function NewQuote() {
       const { quote } = await loadQuote(data.id)
       const versions = parsed.flatMap((p, i) => (p ? [versionFromPdf(p, i + 1, cats)] : []))
       await saveQuote(quote, versions, picked)
+      await Promise.all(parsed.map((p, i) => (p && refs[i].length ? uploadDrafts(data.id, i + 1, refs[i]) : null)))
       navigate(`/quotation/${data.id}`)
     } catch (e) {
       setError((e as Error).message)
@@ -70,7 +75,23 @@ export function NewQuote() {
       <div className="slots">
         {LEVELS.map((l, i) => (
           <PdfSlot key={l.position} label={l.label} hint={l.hint} featured={l.position === 2} state={slots[i]}
-            onChange={s => setSlots(prev => prev.map((x, j) => (j === i ? s : x)))} />
+            onChange={s => setSlots(prev => prev.map((x, j) => (j === i ? s : x)))}>
+            <div className="ref-block">
+              <div className="label subtle">Reference</div>
+              {refs[i].map((r, k) => (
+                <div key={k} className="ref-row">
+                  <RefThumb r={{ media_type: r.media_type, media_url: r.preview }} />
+                  <span style={{ minWidth: 0, flex: 1 }}>
+                    <strong style={{ fontSize: 13 }}>{r.title}</strong>
+                    {r.note && <span className="meta" style={{ display: 'block' }}>{r.note}</span>}
+                  </span>
+                  <button type="button" className="btn btn-ghost btn-sm" aria-label={`Togli la reference ${r.title}`}
+                    onClick={() => setRefs(rs => rs.map((x, j) => (j === i ? x.filter((_, n) => n !== k) : x)))}><IconTrash size={14} /></button>
+                </div>
+              ))}
+              <button type="button" className="btn btn-soft btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setRefFor(i)}>+ Aggiungi reference</button>
+            </div>
+          </PdfSlot>
         ))}
       </div>
 
@@ -113,6 +134,11 @@ export function NewQuote() {
           <p className="meta" style={{ margin: 0 }}>Quando il cliente sceglie una versione, gli arriva la conferma a questo indirizzo e a Chimera arriva l'avviso.</p>
         </div>
       </section>
+
+      {refFor !== null && (
+        <RefModal position={refFor + 1} versionName={LEVELS[refFor].label} onClose={() => setRefFor(null)}
+          onDraft={d => { setRefs(rs => rs.map((x, j) => (j === refFor ? [...x, d] : x))); setRefFor(null) }} />
+      )}
 
       {error && <div className="pill pill-danger" style={{ marginTop: 16, whiteSpace: 'normal' }}>{error}</div>}
 

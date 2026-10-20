@@ -10,8 +10,8 @@ export type SlotState =
   | { kind: 'error'; file: string; message: string }
 
 // Riquadro dove si trascina (o si sceglie) il PDF di un livello
-export function PdfSlot({ label, hint, featured, state, onChange }: {
-  label: string; hint: string; featured?: boolean; state: SlotState; onChange: (s: SlotState) => void
+export function PdfSlot({ label, hint, featured, state, onChange, children }: {
+  label: string; hint: string; featured?: boolean; state: SlotState; onChange: (s: SlotState) => void; children?: React.ReactNode
 }) {
   const input = useRef<HTMLInputElement>(null)
   const [over, setOver] = useState(false)
@@ -66,6 +66,7 @@ export function PdfSlot({ label, hint, featured, state, onChange }: {
           <div className="price-sm num">{total != null ? money(total) : '—'} <span className="meta">+IVA</span></div>
           <div className="meta">{state.parsed.sections.length} voci · {state.parsed.sections.reduce((n, s) => n + s.items.length, 0)} righe di dettaglio</div>
           {state.parsed.warnings.map(w => <div key={w} className="pill pill-warning" style={{ whiteSpace: 'normal' }}>{w}</div>)}
+          {children}
           <button type="button" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start', paddingLeft: 0 }} onClick={() => input.current?.click()}>Cambia PDF</button>
         </div>
       )}
