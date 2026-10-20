@@ -103,6 +103,7 @@ async function saveVersion(quoteId: string, v: Version) {
       days: Number(i.days) || 0,
       unit_price: Number(i.unit_price) || 0,
       nic_pct: Number(i.nic_pct) || 0,
+      unit_cost: i.unit_cost == null ? null : Number(i.unit_cost),
     }))
   })
   if (items.length) check(await supabase.from('quote_items').insert(items))

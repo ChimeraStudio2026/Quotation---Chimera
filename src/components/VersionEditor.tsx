@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { findListino, listinoFor } from '../../supabase/functions/_shared/listino'
-import { itemTotal, money, sectionTotal, versionTotals } from '../lib/calc'
+import { itemCost, itemTotal, money, sectionTotal, versionMargin, versionTotals } from '../lib/calc'
 import type { Category, Item, Section, Version } from '../lib/types'
 import { IconTrash } from './Icons'
 
@@ -20,6 +20,7 @@ const num = (v: string) => {
 export function VersionEditor({ version, cats, onClose, onSave }: Props) {
   const [v, setV] = useState<Version>(() => structuredClone(version))
   const t = versionTotals(v)
+  const m = versionMargin(v)
 
   const sectionOf = (code: string): Section =>
     v.sections.find(s => s.category_code === code) ?? { category_code: code, note: null, extras: 0, items: [] }
@@ -39,7 +40,7 @@ export function VersionEditor({ version, cats, onClose, onSave }: Props) {
   // Scegliendo una voce del listino dal menu, il prezzo arriva dal listino
   const setJob = (s: Section, idx: number, job: string) => {
     const entry = findListino(job)
-    putItem(s, idx, entry ? { job: entry.name, unit_price: entry.dailyPrice } : { job })
+    putItem(s, idx, entry ? { job: entry.name, unit_price: entry.dailyPrice, unit_cost: entry.dailyCost } : { job })
   }
 
   return (
@@ -73,7 +74,7 @@ export function VersionEditor({ version, cats, onClose, onSave }: Props) {
                 <div className="spacer" />
                 {s.items.length > 0 && <span className="num">{money(sectionTotal(s))}</span>}
                 <button type="button" className="btn btn-soft btn-sm"
-                  onClick={() => putSection({ ...s, items: [...s.items, { position: s.items.length, code: null, job: '', note: null, qty: 1, days: 1, unit_price: 0, nic_pct: 0 }] })}>
+                  onClick={() => putSection({ ...s, items: [...s.items, { position: s.items.length, code: null, job: '', note: null, qty: 1, days: 1, unit_price: 0, nic_pct: 0, unit_cost: null }] })}>
                   + Voce
                 </button>
               </div>
@@ -86,7 +87,7 @@ export function VersionEditor({ version, cats, onClose, onSave }: Props) {
                 <div className="ve-table-wrap">
                   <table className="ve-table">
                     <thead>
-                      <tr><th>Job</th><th>Note</th><th>Qty</th><th>Days</th><th>Unit price</th><th>NIC %</th><th>Price</th><th /></tr>
+                      <tr><th>Job</th><th>Note</th><th>Qty</th><th>Days</th><th>Unit price</th><th>NIC %</th><th>Price</th><th className="ve-internal" title="Solo per il team: il cliente non lo vede">Costo unit.</th><th className="ve-internal">Costo</th><th /></tr>
                     </thead>
                     <tbody>
                       {s.items.map((i, idx) => (
@@ -99,6 +100,9 @@ export function VersionEditor({ version, cats, onClose, onSave }: Props) {
                           <td><input className="input num" type="number" value={i.unit_price} onChange={e => putItem(s, idx, { unit_price: num(e.target.value) })} /></td>
                           <td><input className="input num" type="number" value={i.nic_pct} onChange={e => putItem(s, idx, { nic_pct: num(e.target.value) })} /></td>
                           <td className="num">{money(itemTotal(i))}</td>
+                          <td className="ve-internal"><input className="input num" type="number" value={i.unit_cost ?? ''} placeholder="—"
+                            onChange={e => putItem(s, idx, { unit_cost: e.target.value === '' ? null : num(e.target.value) })} /></td>
+                          <td className="num ve-internal">{itemCost(i) === null ? '—' : money(itemCost(i)!)}</td>
                           <td>
                             <button type="button" className="btn btn-ghost btn-sm" aria-label="Togli voce"
                               onClick={() => putSection({ ...s, items: s.items.filter((_, k) => k !== idx) })}><IconTrash size={14} /></button>
@@ -116,6 +120,11 @@ export function VersionEditor({ version, cats, onClose, onSave }: Props) {
         <div className="row ve-footer">
           <span className="meta num">
             Subtotale {money(t.subtotal)} · fee {money(t.fee)}{t.total !== t.subtotal + t.fee ? ` · sconto ${money(Number(v.discount))}` : ''} · totale {money(t.total)} +IVA
+            <br />
+            <span className="ve-margin">
+              Costo interno {money(m.cost)} · margine <strong>{money(m.margin)} ({Math.round(m.marginPct * 100)}%)</strong>
+              {m.missingCost > 0 && ` · ${m.missingCost} ${m.missingCost === 1 ? 'voce' : 'voci'} senza costo`}
+            </span>
           </span>
           <div className="spacer" />
           <button className="btn btn-ghost" onClick={onClose}>Annulla</button>

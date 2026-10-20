@@ -19,6 +19,8 @@ type ListinoRow = readonly [
 export type ListinoEntry = {
   name: string
   categories: readonly string[]
+  /** Costo interno Chimera: serve solo al team per il margine, mai al cliente */
+  dailyCost: number
   dailyPrice: number
   nightlyPrice: number
   timeValue: string
@@ -175,9 +177,10 @@ const ROWS: readonly ListinoRow[] = [
   ['Waiter on Set ( 8+1 h )', ['FOOD'], 210, 300, 360, 30, 2, '8+1', 0],
 ]
 
-export const LISTINO: readonly ListinoEntry[] = ROWS.map(([name, categories, , dailyPrice, nightlyPrice, , , timeValue]) => ({
+export const LISTINO: readonly ListinoEntry[] = ROWS.map(([name, categories, dailyCost, dailyPrice, nightlyPrice, , , timeValue]) => ({
   name,
   categories,
+  dailyCost,
   dailyPrice,
   nightlyPrice,
   timeValue,

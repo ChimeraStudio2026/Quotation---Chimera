@@ -10,6 +10,8 @@ export type Item = {
   days: number
   unit_price: number
   nic_pct: number
+  /** Costo interno per unità e giorno (listino o a mano): solo per il team, la vista cliente non lo riceve */
+  unit_cost?: number | null
 }
 
 export type Section = {

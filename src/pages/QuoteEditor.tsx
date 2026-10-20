@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { appUrl, supabase } from '../lib/supabase'
 import { DEFAULT_VERSIONS, deleteReference, loadCategories, loadQuote, loadWorks, saveQuote } from '../lib/quoteData'
-import { fmtDate, isIncluded, money, sectionTotal, versionTotals } from '../lib/calc'
+import { fmtDate, isIncluded, money, sectionTotal, versionMargin, versionTotals } from '../lib/calc'
 import { headerFromPdf, versionFromPdf } from '../lib/fromPdf'
 import { SERVICES, type Category, type Quote, type Reference, type Version, type Work } from '../lib/types'
 import { StatusPill } from '../components/StatusPill'
@@ -221,6 +221,7 @@ export function QuoteEditor() {
                       </li>
                     ))}
                   </ul>
+                  <MarginLine v={v} />
                   <div className="meta">Fee {v.production_fee_pct}%{Number(v.discount) > 0 ? ` · sconto ${money(Number(v.discount))}` : ''} · IVA {v.vat_pct}%</div>
                   <div className="ref-block">
                     <div className="label subtle">Reference</div>
@@ -343,15 +344,29 @@ export function QuoteEditor() {
       )}
       {refFor !== null && (
         <RefModal quoteId={quote.id} position={refFor} versionName={versions.find(v => v.position === refFor)?.name ?? ''}
+          positions={versions.map(v => v.position)}
           onClose={() => setRefFor(null)}
-          onSaved={r => {
-            setVersions(vs => vs.map(v => (v.position === refFor ? { ...v, references: [...(v.references ?? []), r] } : v)))
+          onSaved={added => {
+            setVersions(vs => vs.map(v => ({ ...v, references: [...(v.references ?? []), ...added.filter(r => r.version_position === v.position)] })))
             setRefFor(null)
-            toast.show('Reference aggiunta')
+            toast.show(added.length === 1 ? 'Reference aggiunta' : `${added.length} reference aggiunte`)
           }} />
       )}
       {editing && <VersionEditor version={editing} cats={cats} onClose={() => setEditing(null)} onSave={saveVersion} />}
       {toast.node}
     </>
+  )
+}
+
+// Margine interno della versione: solo per il team, la pagina del cliente non lo mostra
+function MarginLine({ v }: { v: Version }) {
+  const m = versionMargin(v)
+  const tone = m.marginPct >= 0.4 ? 'good' : m.marginPct >= 0.25 ? 'ok' : 'low'
+  return (
+    <div className={`margin-line ${tone}`} title="Totale venduto (IVA esclusa) meno i costi interni da listino">
+      <span>Costo {money(m.cost)}</span>
+      <strong>Margine {money(m.margin)} · {Math.round(m.marginPct * 100)}%</strong>
+      {m.missingCost > 0 && <span className="meta">{m.missingCost} {m.missingCost === 1 ? 'voce' : 'voci'} senza costo</span>}
+    </div>
   )
 }

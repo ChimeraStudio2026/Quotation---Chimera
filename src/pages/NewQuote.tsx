@@ -159,8 +159,8 @@ export function NewQuote() {
       </section>
 
       {refFor !== null && (
-        <RefModal position={refFor + 1} versionName={LEVELS[refFor].label} onClose={() => setRefFor(null)}
-          onDraft={d => { setRefs(rs => rs.map((x, j) => (j === refFor ? [...x, d] : x))); setRefFor(null) }} />
+        <RefModal position={refFor + 1} versionName={LEVELS[refFor].label} positions={LEVELS.map(l => l.position)} onClose={() => setRefFor(null)}
+          onDraft={(drafts, all) => { setRefs(rs => rs.map((x, j) => (all || j === refFor ? [...x, ...drafts] : x))); setRefFor(null) }} />
       )}
 
       {error && <div className="pill pill-danger" style={{ marginTop: 16, whiteSpace: 'normal' }}>{error}</div>}

@@ -494,3 +494,13 @@ img, video { display: block; max-width: 100%; }
 .ve-table .input.num { width: 84px; text-align: right; }
 .ve-table td.num { text-align: right; white-space: nowrap; font-weight: 600; }
 .ve-footer { position: sticky; bottom: -28px; background: var(--surface-card); padding: 12px 0; border-top: 1px solid var(--border); flex-wrap: wrap; }
+
+/* Costo e margine interni (solo team) */
+.ve-table th.ve-internal { color: var(--nova-ink); }
+.ve-table td.ve-internal { background: var(--nova-tint); }
+.ve-margin { color: var(--nova-ink); }
+.margin-line { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 8px 10px; border-radius: var(--radius-md); font-size: 13px; background: var(--surface-muted); }
+.margin-line.good strong { color: var(--success-ink); }
+.margin-line.ok strong { color: var(--warning-ink); }
+.margin-line.low strong { color: var(--danger-ink); }
+.ref-all { gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }

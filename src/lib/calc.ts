@@ -6,6 +6,19 @@ export const itemTotal = (i: Item) => n(i.qty) * n(i.days) * n(i.unit_price) * (
 
 export const sectionTotal = (s: Section) => s.items.reduce((sum, i) => sum + itemTotal(i), 0)
 
+// Costo interno di una voce; null se non è stato indicato (voce libera senza costo)
+export const itemCost = (i: Item) => (i.unit_cost === null || i.unit_cost === undefined ? null : n(i.qty) * n(i.days) * n(i.unit_cost))
+
+// Margine di una versione: totale venduto (fee e sconto compresi, IVA esclusa) meno i costi interni
+export function versionMargin(v: Version) {
+  const items = v.sections.flatMap(s => s.items)
+  const cost = items.reduce((sum, i) => sum + (itemCost(i) ?? 0), 0)
+  const missingCost = items.filter(i => itemCost(i) === null).length
+  const { total } = versionTotals(v)
+  const margin = total - cost
+  return { cost, margin, marginPct: total > 0 ? margin / total : 0, missingCost }
+}
+
 export function versionTotals(v: Version) {
   const subtotal = v.sections.reduce((sum, s) => sum + sectionTotal(s), 0)
   const extras = v.sections.reduce((sum, s) => sum + n(s.extras), 0)

@@ -1,6 +1,7 @@
 import type { ParsedQuote } from './cerberoParser'
 import type { Category, Quote, Version } from './types'
 import { DEFAULT_VERSIONS } from './quoteData'
+import { findListino } from '../../supabase/functions/_shared/listino'
 
 // Trasforma un PDF letto nella versione della quotation (posizione 1, 2 o 3)
 export function versionFromPdf(p: ParsedQuote, position: number, cats: Category[], name?: string): Version {
@@ -19,7 +20,7 @@ export function versionFromPdf(p: ParsedQuote, position: number, cats: Category[
         category_code: cat.code,
         note: s.note,
         extras: s.extras,
-        items: s.items.map((i, idx) => ({ ...i, position: idx })),
+        items: s.items.map((i, idx) => ({ ...i, position: idx, unit_cost: findListino(i.job)?.dailyCost ?? null })),
       }]
     }),
   }
