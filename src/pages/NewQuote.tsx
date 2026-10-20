@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { loadCategories, loadQuote, saveQuote } from '../lib/quoteData'
+import { loadCategories, loadQuote, loadWorks, saveQuote } from '../lib/quoteData'
 import { headerFromPdf, versionFromPdf } from '../lib/fromPdf'
-import { SERVICES, type Category } from '../lib/types'
+import { SERVICES, type Category, type Work } from '../lib/types'
 import { PdfSlot, type SlotState } from '../components/PdfSlot'
+import { IconStar } from '../components/Icons'
 
 const LEVELS = [
   { position: 1, label: 'Essential', hint: 'Livello 1' },
@@ -19,8 +20,15 @@ export function NewQuote() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [services, setServices] = useState<string[]>([])
+  const [works, setWorks] = useState<Work[]>([])
+  const [picked, setPicked] = useState<string[]>([])
+  const [intro, setIntro] = useState('')
+  const [clientEmail, setClientEmail] = useState('')
 
-  useEffect(() => { loadCategories().then(setCats).catch(e => setError(e.message)) }, [])
+  useEffect(() => {
+    loadCategories().then(setCats).catch(e => setError(e.message))
+    loadWorks().then(setWorks).catch(() => setWorks([]))
+  }, [])
 
   // Servono almeno 2 versioni su 3; un livello lasciato vuoto non viene creato
   const okCount = slots.filter(s => s.kind === 'ok').length
@@ -35,11 +43,11 @@ export function NewQuote() {
     try {
       // Cliente e progetto dal PDF centrale, o dal primo caricato se il livello 2 manca
       const main = parsed[1] ?? parsed.find(Boolean)!
-      const { data, error } = await supabase.from('quotes').insert({ ...headerFromPdf(main), services }).select().single()
+      const { data, error } = await supabase.from('quotes').insert({ ...headerFromPdf(main), services, intro: intro.trim() || null, client_email: clientEmail.trim() || null }).select().single()
       if (error) throw error
       const { quote } = await loadQuote(data.id)
       const versions = parsed.flatMap((p, i) => (p ? [versionFromPdf(p, i + 1, cats)] : []))
-      await saveQuote(quote, versions, [])
+      await saveQuote(quote, versions, picked)
       navigate(`/quotation/${data.id}`)
     } catch (e) {
       setError((e as Error).message)
@@ -68,8 +76,8 @@ export function NewQuote() {
 
       <section className="card stack" style={{ marginTop: 24 }}>
         <div>
-          <h2 className="section-title">Che categoria di evento è?</h2>
-          <p className="meta" style={{ margin: '4px 0 0' }}>Il cliente vede girare i nostri lavori di questa categoria. Puoi sceglierne più di una e cambiarla dopo.</p>
+          <h2 className="section-title">Categoria di evento e lavori da mostrare</h2>
+          <p className="meta" style={{ margin: '4px 0 0' }}>Il cliente vede girare i nostri lavori di questa categoria. Se scegli dei lavori singoli, vede solo quelli. Puoi cambiare tutto anche dopo.</p>
         </div>
         <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
           {SERVICES.map(sv => {
@@ -79,6 +87,30 @@ export function NewQuote() {
                 onClick={() => setServices(p => (on ? p.filter(x => x !== sv) : [...p, sv]))}>{sv}</button>
             )
           })}
+        </div>
+        <details>
+          <summary className="label subtle" style={{ cursor: 'pointer' }}>Oppure scegli lavori singoli ({picked.length})</summary>
+          <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+            {works.map(w => {
+              const on = picked.includes(w.id)
+              return (
+                <button key={w.id} type="button" className={`chip ${on ? 'on' : ''}`} aria-pressed={on}
+                  onClick={() => setPicked(p => (on ? p.filter(x => x !== w.id) : [...p, w.id]))}>
+                  {on && <IconStar size={12} />}{w.brand ? `${w.brand} · ` : ''}{w.title}
+                </button>
+              )
+            })}
+          </div>
+        </details>
+
+        <div className="works-pick stack">
+          <h3 className="section-title">Messaggio per il cliente</h3>
+          <textarea className="textarea" value={intro} onChange={e => setIntro(e.target.value)}
+            placeholder="Facoltativo: due righe sul progetto, il cliente le legge in apertura." />
+          <label className="field"><span>Email del cliente (facoltativa)</span>
+            <input className="input" type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder="nome@azienda.it" />
+          </label>
+          <p className="meta" style={{ margin: 0 }}>Quando il cliente sceglie una versione, gli arriva la conferma a questo indirizzo e a Chimera arriva l'avviso.</p>
         </div>
       </section>
 
