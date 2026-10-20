@@ -31,8 +31,12 @@ Deno.serve(async req => {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user?.email?.toLowerCase().endsWith(TEAM_DOMAIN)) return json({ error: 'Solo per il team Chimera.' }, 401)
 
-  const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
+  // Spazi, a capo e virgolette arrivano spesso dal copia-incolla della chiave: si tolgono qui
+  const apiKey = (Deno.env.get('ANTHROPIC_API_KEY') ?? '').trim().replace(/^["'“”‘’]+|["'“”‘’]+$/g, '').trim()
   if (!apiKey) return json({ error: 'ANTHROPIC_API_KEY non configurata nei secret delle Edge Functions di Supabase.' }, 500)
+  if (!/^[\x21-\x7e]+$/.test(apiKey)) {
+    return json({ error: 'La chiave ANTHROPIC_API_KEY su Supabase contiene caratteri non validi: incollala di nuovo, solo la chiave (inizia con sk-ant-).' }, 500)
+  }
 
   const body = await req.json().catch(() => null) as { message?: unknown; draft?: unknown; history?: unknown } | null
   const message = typeof body?.message === 'string' ? body.message.trim().slice(0, 20000) : ''
