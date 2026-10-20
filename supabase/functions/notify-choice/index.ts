@@ -4,7 +4,9 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { clientMail, teamMail, type MailData } from './mail.ts'
 
 const APP_URL = Deno.env.get('APP_URL') ?? 'https://quotation.chimerastudioss.com'
-const FROM = Deno.env.get('MAIL_FROM') ?? 'Chimera Studio <onboarding@resend.dev>'
+const FROM = Deno.env.get('MAIL_FROM') ?? 'Chimera Studio <chimera@chimerastudioss.com>'
+// Finché chimerastudioss.com non è verificato su Resend si usa il mittente di prova
+const FALLBACK_FROM = 'Chimera Studio <onboarding@resend.dev>'
 const NOTIFY_TO = (Deno.env.get('NOTIFY_TO') ?? 'jeck@chimerastudioss.com').split(',').map(s => s.trim()).filter(Boolean)
 
 const cors = {
@@ -29,11 +31,13 @@ function totals(v: Version) {
 }
 
 async function send(key: string, to: string[], subject: string, html: string, replyTo?: string) {
-  const r = await fetch('https://api.resend.com/emails', {
+  const post = (from: string) => fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: FROM, to, subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
+    body: JSON.stringify({ from, to, subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
   })
+  let r = await post(FROM)
+  if (r.status === 403 && /not verified/i.test(await r.clone().text())) r = await post(FALLBACK_FROM)
   return r.ok ? null : `${r.status} ${await r.text()}`
 }
 
