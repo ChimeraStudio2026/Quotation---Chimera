@@ -1,4 +1,4 @@
-// Listino figure e voci, trascritto dal Jobs Database di Cerbero.
+// Listino figure e voci: le voci ACTIVE del Jobs Database di Cerbero (export job.csv).
 // Lo usano sia l'app (editor delle voci) sia la funzione quote-assistant (prompt di Claude):
 // niente import specifici di Deno o di Vite qui dentro.
 // Formato: [nome, categorie, orario, NIC %, prezzo giornaliero, costo giornaliero,
@@ -58,8 +58,8 @@ const ROWS: readonly ListinoRow[] = [
   // Casting
   ['Actor Street Casting (4h + 1)', [CAST], '4h', 0, 250, 100, 0, 0, 0, 0],
   ['Actor Street Casting (8h + 1)', [CAST], '8+1', 0, 350, 150, 0, 0, 0, 0],
-  ['Not Professional Actor Man / Woman', [CAST], '8+1', 0, 700, 400, 50, 50, 700, 500],
-  ['Professional Actor Man / Woman', [CAST], '8+1', 0, 1500, 1000, 75, 75, 1500, 1200],
+  ['Not Professional Actor Man / Woman (8h + 1)', [CAST], '8+1', 0, 700, 400, 50, 50, 700, 500],
+  ['Professional Actor Man / Woman (8h + 1)', [CAST], '8+1', 0, 1500, 1000, 75, 75, 1500, 1200],
 
   // Direction
   ['1st AD (8+1 h)', [DIR], '8+1', 0, 750, 400, 60, 60, 750, 400],
@@ -70,10 +70,10 @@ const ROWS: readonly ListinoRow[] = [
   ['2nd AC ( 8+1 h )', [CREW], '8+1', 0, 500, 350, 50, 50, 550, 350],
   ['Cam. OP ( 4+1 h )', [CREW], '4+1', 0, 500, 350, 50, 0, 610, 350],
   ['Cam. OP ( 8+1 h )', [CREW], '8+1', 0, 700, 450, 50, 0, 850, 450],
-  ['Content Creator w/ Cam | incl. live editing ( 4+1 h )', [CREW], '4+1', 0, 600, 300, 0, 0, 700, 300],
-  ['Content Creator w/ Cam | incl. live editing ( 8+1 h )', [CREW], '8+1', 0, 900, 500, 150, 150, 1100, 450],
-  ['Content Creator w/ iPhone | incl. live editing ( 4+1 h )', [CREW], '4+1', 0, 500, 300, 0, 0, 700, 350],
-  ['Content Creator w/ iPhone | incl. live editing ( 8+1 h )', [CREW], '8+1', 0, 800, 450, 100, 100, 1100, 450],
+  ['Content Creator w/ Cam | incl. live editing ( 4h )', [CREW], '4+1', 0, 600, 300, 0, 0, 700, 300],
+  ['Content Creator w/ Cam | incl. live editing ( 8h )', [CREW], '8+1', 0, 900, 500, 150, 150, 1100, 450],
+  ['Content Creator w/ iPhone | incl. live editing ( 4h )', [CREW], '4+1', 0, 500, 300, 0, 0, 700, 350],
+  ['Content Creator w/ iPhone | incl. live editing ( 8h )', [CREW], '8+1', 0, 800, 450, 100, 100, 1100, 450],
   ['Data Manager ( 8+1 h )', [CREW], '8+1', 0, 300, 300, 50, 50, 500, 300],
   ['Electrician ( 8+1 h )', [CREW], '8+1', 0, 500, 350, 50, 50, 500, 350],
   ['Event Photographer (4+1)', [CREW], '4h', 0, 500, 300, 0, 0, 0, 0],
@@ -112,7 +112,7 @@ const ROWS: readonly ListinoRow[] = [
   ['Drone Permit', [LOG], '', 0, 0, 0, 0, 0, 150, 50],
   ['Public Land Occupation', [LOG], '', 35, 0, 0, 0, 0, 0, 0],
   ['Rental Car/Van', [LOG], '', 0, 1, 0, 0, 0, 250, 150],
-  ['Travel A/R - Benzina, caselli e utilizzo auto', [LOG], '', 0, 1, 0, 0, 0, 1, 0],
+  ['Travel A/R - Benzina, casellii e utilizzo mezzo', [LOG], '', 0, 1, 0, 0, 0, 1, 0],
 
   // Post-Production
   ['2D VFX ( 8+1 h )', [POST], '8+1', 0, 710, 450, 60, 60, 850, 450],
