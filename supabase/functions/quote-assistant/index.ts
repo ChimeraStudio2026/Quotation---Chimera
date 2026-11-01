@@ -1,13 +1,12 @@
 // Assistente preventivi: riceve la richiesta dell'account e la quotation attuale,
 // chiede a Claude la quotation aggiornata e la restituisce all'app.
-// Solo il team (@chimerastudioss.com) può usarla. La chiave di Anthropic sta nei secret di Supabase.
+// Solo il team (account Google @chimerastudioss.com) può usarla. La chiave di Anthropic sta nei secret di Supabase.
 import Anthropic from 'npm:@anthropic-ai/sdk@0.135.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { SYSTEM_PROMPT } from './prompt.ts'
 import { RESPONSE_SCHEMA } from './schema.ts'
 
 const MODEL = 'claude-opus-5-5'
-const TEAM_DOMAIN = '@chimerastudioss.com'
 const HISTORY_LIMIT = 20
 
 const cors = {
@@ -28,8 +27,9 @@ Deno.serve(async req => {
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
   })
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user?.email?.toLowerCase().endsWith(TEAM_DOMAIN)) return json({ error: 'Solo per il team Chimera.' }, 401)
+  // Stesso controllo delle RLS (is_team): email Chimera ed entrato con Google
+  const { data: isTeam } = await supabase.rpc('is_team')
+  if (isTeam !== true) return json({ error: 'Solo per il team Chimera.' }, 401)
 
   // Spazi, a capo e virgolette arrivano spesso dal copia-incolla della chiave: si tolgono qui
   const apiKey = (Deno.env.get('ANTHROPIC_API_KEY') ?? '').trim().replace(/^["'“”‘’]+|["'“”‘’]+$/g, '').trim()

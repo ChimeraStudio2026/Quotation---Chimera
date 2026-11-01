@@ -22,8 +22,9 @@ Stile: design system **Caronte NOVA** (DM Sans, token colore e raggi in `src/sty
 Il calcolo è quello dei PDF attuali: `subtotale = somma voci (q.tà × giorni × prezzo × (1 + NIC%))`,
 `totale = subtotale + production fee − sconto`, poi `+IVA`. Gli extras sono mostrati a parte.
 
-Accesso al team: solo email **@chimerastudioss.com** (registrazione dalla pagina di login, con conferma via email).
-La regola è applicata anche nel database (RLS), non solo nell'interfaccia.
+Accesso al team: solo con **Google**, account del Workspace Chimera Studios (**@chimerastudioss.com**).
+La app OAuth su Google Cloud è di tipo *Internal*, quindi Google stesso rifiuta chi non è nell'organizzazione.
+La regola è applicata anche nel database (`is_team()` nelle RLS: email Chimera + sessione Google), non solo nell'interfaccia.
 
 ## Backend
 

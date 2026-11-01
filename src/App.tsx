@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
-import { supabase, TEAM_DOMAIN } from './lib/supabase'
+import { isTeamUser, supabase } from './lib/supabase'
 import { AppShell } from './components/AppShell'
 import { Login } from './pages/Login'
 import { Dashboard } from './pages/Dashboard'
@@ -32,7 +32,7 @@ function TeamArea() {
 
   if (session === undefined) return null
   const email = session?.user.email ?? ''
-  if (!session || !email.toLowerCase().endsWith(TEAM_DOMAIN)) return <Login wrongAccount={!!session} />
+  if (!session || !isTeamUser(session.user)) return <Login wrongEmail={session ? email || 'Questo account' : null} />
 
   return (
     <Routes>
